@@ -156,7 +156,13 @@
     <br>
     <h3 class="light-text">CycloneDX JSON file</h3>
     <div id="upload-file-container">Select a CycloneDX JSON file from your file system. All submitted data is processed locally within your browser, without being transmitted anywhere else.<input type="file" id="file-input" class="form-control" style="width: 50%;" accept=".json">
-        Don't have a CycloneDX JSON file right now? <a href="https://lucacapacci.github.io/Sunshine/sample.html">See a sample HTML output here.</a><br>Wanna use a standalone CLI version? <a href="https://github.com/lucacapacci/Sunshine/">Download it here.</a></div>
+        <ul>
+            <li>If you do not have a CycloneDX JSON file available, but just want to see what output is produced by the tool <a href="https://lucacapacci.github.io/Sunshine/sample.html">see a sample HTML output here.</a></li>
+            <li>If your SBOM file is not in the CycloneDX JSON format, such as SPDX or CycloneDX XML, you can convert it using <a href="https://cyclonedx.github.io/cyclonedx-web-tool/convert">CycloneDX Web Tool.</a></li>
+            <li>If you prefer using a standalone CLI version <a href="https://github.com/lucacapacci/Sunshine/">download it here.</a></li>
+        </ul>
+    </div>
+        
     <br>
     <h3 class="light-text">Components chart</h3>
     <div id="chart-container" style="display: none">
