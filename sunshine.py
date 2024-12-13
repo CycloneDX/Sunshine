@@ -365,6 +365,21 @@ def create_fake_component(bom_ref):
             "visited": False}
 
 
+def create_base_component(component):
+    new_component = {"name": component["name"],
+                     "version": component["version"] if "version" in component else "-",
+                     "type": component["type"] if "type" in component else "-",
+                     "license": parse_licenses(component),
+                     "depends_on": set(),
+                     "dependency_of": set(),
+                     "vulnerabilities": [],
+                     "transitive_vulnerabilities": [],
+                     "max_vulnerability_severity": "clean",
+                     "has_transitive_vulnerabilities": False,
+                     "visited": False}
+
+    return new_component
+
 def get_severity_by_score(score):
     score = float(score)
     if score >= 9:
@@ -547,6 +562,23 @@ def has_bom_ref_components(bom_refs, bom_ref):
     return normalize_bom_ref(bom_refs, bom_ref, only_valid_components=False) is not None
 
 
+def add_nested_components(component, components, all_bom_refs):
+    for child_key in ["services", "components"]:
+        if child_key in component:
+            for sub_component in component[child_key]:
+                new_component = create_base_component(sub_component)
+                bom_ref = get_bom_ref(sub_component, all_bom_refs)
+                components[bom_ref] = new_component
+                add_nested_components(sub_component, components, all_bom_refs)
+
+
+def detect_nested_bom_refs(component, bom_refs):
+    for child_key in ["services", "components"]:
+        if child_key in component:
+            for sub_component in component[child_key]:
+                if "bom-ref" in sub_component:
+                    create_or_update_bom_ref_entry(bom_refs, sub_component)
+
 def get_all_bom_refs(data):
     bom_refs = {}
     meta_bom_ref_is_used = False
@@ -562,13 +594,7 @@ def get_all_bom_refs(data):
             if "bom-ref" in component:
                 create_or_update_bom_ref_entry(bom_refs, component)
 
-            if root_keyword == "services":
-                component_with_services = component
-                while "services" in component_with_services:
-                    for sub_component in component_with_services["services"]:
-                        if "bom-ref" in sub_component:
-                            create_or_update_bom_ref_entry(bom_refs, sub_component)
-                        component_with_services = sub_component
+            detect_nested_bom_refs(component, bom_refs)
 
     for root_keyword in root_keywords:
         for component in data[root_keyword]:
@@ -623,55 +649,16 @@ def parse_json_data(data):
         if "component" in data["metadata"]:
             component = data["metadata"]["component"]
             if meta_bom_ref_is_used is True:
-                new_component = {"name": component["name"],
-                                 "version": component["version"] if "version" in component else "-",
-                                 "type": component["type"] if "type" in component else "-",
-                                 "license": parse_licenses(component),
-                                 "depends_on": set(),
-                                 "dependency_of": set(),
-                                 "vulnerabilities": [],
-                                 "transitive_vulnerabilities": [],
-                                 "max_vulnerability_severity": "clean",
-                                 "has_transitive_vulnerabilities": False,
-                                 "visited": False}
-
+                new_component = create_base_component(component)
                 bom_ref = get_bom_ref(component, all_bom_refs)
                 components[bom_ref] = new_component
 
     for root_keyword in root_keywords:
         for component in data[root_keyword]:
-            new_component = {"name": component["name"],
-                             "version": component["version"] if "version" in component else "-",
-                             "type": component["type"] if "type" in component else "-",
-                             "license": parse_licenses(component),
-                             "depends_on": set(),
-                             "dependency_of": set(),
-                             "vulnerabilities": [],
-                             "transitive_vulnerabilities": [],
-                             "max_vulnerability_severity": "clean",
-                             "has_transitive_vulnerabilities": False,
-                             "visited": False}
-
+            new_component = create_base_component(component)
             bom_ref = get_bom_ref(component, all_bom_refs)
             components[bom_ref] = new_component
-
-        if root_keyword == "services":
-            if "services" in component:
-                for sub_component in component["services"]:
-                    new_component = {"name": sub_component["name"],
-                                     "version": sub_component["version"] if "version" in sub_component else "-",
-                                     "type": sub_component["type"] if "type" in sub_component else "-",
-                                     "license": parse_licenses(sub_component),
-                                     "depends_on": set(),
-                                     "dependency_of": set(),
-                                     "vulnerabilities": [],
-                                     "transitive_vulnerabilities": [],
-                                     "max_vulnerability_severity": "clean",
-                                     "has_transitive_vulnerabilities": False,
-                                     "visited": False}
-
-                    bom_ref = get_bom_ref(sub_component, all_bom_refs)
-                    components[bom_ref] = new_component
+            add_nested_components(component, components, all_bom_refs)
 
         # sometimes dependencies are declared inside a component, I'll check that now
         for component in data[root_keyword]:
@@ -823,6 +810,11 @@ def add_transitive_vulnerabilities_to_component(component, vulnerabilities):
             component["transitive_vulnerabilities"].append(vulnerability)
 
 
+def format_dependency_chain(parents_branch, depends_on):
+    parents_branch.append(depends_on)
+    return " --> ".join(parents_branch)
+
+
 def get_children(components, component, parents):
     children = []
     value = 0
@@ -851,7 +843,7 @@ def get_children(components, component, parents):
                              "itemStyle": determine_style(child_component)
                              })
         else:
-            custom_print(f"WARNING: component with bom-ref {depends_on} may be a circular dependency.")
+            custom_print(f"WARNING: component with bom-ref '{depends_on}' may be a circular dependency. Dependency chain: {format_dependency_chain(parents_branch, depends_on)}")
             value += 1
             for child_depends_on in child_component["depends_on"]:
                 child_depends_on = components[child_depends_on]
