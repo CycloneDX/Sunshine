@@ -542,8 +542,9 @@ def normalize_bom_ref(bom_refs, bom_ref, only_valid_components=True):
 
     return None
 
-def has_bom_ref_components(bom_refs, bom_ref, only_valid_components=False):
-    return normalize_bom_ref(bom_refs, bom_ref) is not None
+
+def has_bom_ref_components(bom_refs, bom_ref):
+    return normalize_bom_ref(bom_refs, bom_ref, only_valid_components=False) is not None
 
 
 def get_all_bom_refs(data):
