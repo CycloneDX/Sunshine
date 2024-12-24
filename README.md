@@ -7,7 +7,7 @@
   
 Sunshine: actionable CycloneDX visualization tool. 
 <br><br>
-It takes a JSON CycloneDX file as input and provides as output an HTML containing a chart and a table representation of the components, dependencies, vulnerabilities and licenses. [See a sample HTML output here.](https://lucacapacci.github.io/Sunshine/sample.html)
+It takes a JSON CycloneDX file as input and provides as output an HTML containing a chart and a table representation of the components, dependencies, vulnerabilities and licenses. [See a sample HTML output here.](https://cyclonedx.github.io/Sunshine/sample.html)
 
 <br>
 
@@ -17,7 +17,7 @@ Can be used in 2 ways:
 <br>
 
 Usage of the web application:
-- option 1: via the online version at URL https://lucacapacci.github.io/Sunshine/
+- option 1: via the online version at URL https://cyclonedx.github.io/Sunshine/
 - option 2: by running `python3 -m http.server 8000` and opening a browser at URL http://127.0.0.1:8000
 
 <br>
