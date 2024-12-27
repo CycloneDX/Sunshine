@@ -438,7 +438,7 @@ def get_bom_ref(component_json, all_bom_refs):
     if "bom-ref" in component_json:
         bom_ref = component_json["bom-ref"]
     else:
-        custom_print(f"WARNING: component with name '{component_json['name']}' and version '{component_json["version"]}' does not have a 'bom-ref'. I'll search for a match...")
+        custom_print(f"WARNING: component with name '{component_json['name']}' and version '{component_json['version']}' does not have a 'bom-ref'. I'll search for a match...")
         for potential_bom_ref in all_bom_refs:
             guessed_name_01 = f'{component_json["name"]}@{component_json["version"]}'
             guessed_name_02 = f'{component_json["name"]}::{component_json["version"]}'
