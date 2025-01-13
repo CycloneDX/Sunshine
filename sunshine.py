@@ -398,24 +398,30 @@ def parse_vulnerability_data(vulnerability):
     vuln_id = vulnerability["id"]
 
     vuln_severity = None
-    for rating in vulnerability["ratings"]:
-        for preferred_rating_method in PREFERRED_VULNERABILITY_RATING_METHODS_ORDER:
-            if rating["method"] == preferred_rating_method:
-                if "severity" in rating:
-                    rating_vuln_severity = rating["severity"]
-                    if rating_vuln_severity.lower() in VALID_SEVERITIES:
-                        if rating_vuln_severity.lower() == "info":
-                            rating_vuln_severity = "information"
-                        vuln_severity = rating_vuln_severity.lower()
+    if "ratings" in vulnerability:
+        for rating in vulnerability["ratings"]:
+            if "method" not in rating:
+                continue
+            for preferred_rating_method in PREFERRED_VULNERABILITY_RATING_METHODS_ORDER:
+                if rating["method"] == preferred_rating_method:
+                    if "severity" in rating:
+                        rating_vuln_severity = rating["severity"]
+                        if rating_vuln_severity.lower() in VALID_SEVERITIES:
+                            if rating_vuln_severity.lower() == "info":
+                                rating_vuln_severity = "information"
+                            vuln_severity = rating_vuln_severity.lower()
+                            break
+                    if "score" in rating:
+                        vuln_severity = get_severity_by_score(rating["score"])
                         break
-                if "score" in rating:
-                    vuln_severity = get_severity_by_score(rating["score"])
-                    break
+
 
     if vuln_severity is None:
         if "ratings" not in vulnerability:
+            custom_print(f"WARNING: vulnerability with id '{vulnerability['id']}' does not have a 'ratings' field. I'll set a default 'INFORMATION' severity...")
             vuln_severity = get_severity_by_score(0)
         elif len(vulnerability["ratings"]) == 0:
+            custom_print(f"WARNING: vulnerability with id '{vulnerability['id']}' does have an empty 'ratings' field. I'll set a default 'INFORMATION' severity...")
             vuln_severity = get_severity_by_score(0)
         else:
             for rating in vulnerability["ratings"]:
@@ -429,6 +435,7 @@ def parse_vulnerability_data(vulnerability):
                     break
 
     if vuln_severity is None:
+        custom_print(f"WARNING: could not detect severity of vulnerability with id '{vulnerability['id']}'. I'll set a default 'INFORMATION' severity...")
         vuln_severity = get_severity_by_score(0)
 
     return vuln_id, vuln_severity
