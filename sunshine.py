@@ -10,10 +10,10 @@ NAME = "Sunshine"
 
 PREFERRED_VULNERABILITY_RATING_METHODS_ORDER = ["CVSSv4",
                                                 "CVSSv31"
-                                                "CVSSv3"
-                                                "CVSSv2"
-                                                "OWASP"
-                                                "SSVC"
+                                                "CVSSv3",
+                                                "CVSSv2",
+                                                "OWASP",
+                                                "SSVC",
                                                 "other"]
 
 VALID_SEVERITIES = {"critical": 4,
