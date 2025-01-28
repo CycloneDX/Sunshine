@@ -345,6 +345,8 @@
             if (!file) return;
             hideDiv("chart-container");
             showDiv("chart-container-placeholder");
+            hideDiv("table-container");
+            showDiv("table-container-placeholder");
             writeToLog("~~~~~~~~~~~~~~~ New file selected ~~~~~~~~~~~~~~~");
             var reader = new FileReader();
             reader.onload = function(e) {
@@ -417,10 +419,6 @@
                     let columnIndex = $(this).parent().index();
                     table.column(columnIndex).search(this.value).draw();
                 });
-
-                
-
-                //table.columns.adjust();
             }
 
             showDiv("table-container");
@@ -444,15 +442,60 @@
             return str;
         }
 
-        function compressAndEncode(data) {
+        function sleep(ms) {
+          return new Promise(resolve => setTimeout(resolve, ms))
+        }
+
+        function splitArrayIntoNParts(arr, n) {
+            if (n == 1) {
+                return [arr];
+            }
+            const chunkSize = Math.ceil(arr.length / n);
+            const result = [];
+
+            for (let i = 0; i < arr.length; i += chunkSize) {
+                result.push(arr.slice(i, i + chunkSize));
+            }
+
+            return result;
+        }
+
+        async function compressAndEncode(data) {
             data = prepare_data(data);
             var compression_mode = 1;
+            var finishedCompression = false;
             LZMA.compress(data, compression_mode, function on_compress_complete(result) {
-                var byteArr = new Uint8Array(result);
-                const base64Encoded = btoa(String.fromCharCode(...byteArr));
-                window.location.hash = base64Encoded;
-                writeToLog("Permalink built!");
+                try {
+                    var originalByteArr = new Uint8Array(result);
+                    var fromCharCoded = "";
+                    var hasError = true;
+                    var currentSplit = 4;
+                    while (hasError) {
+                        try {
+                            for (let byteArr of splitArrayIntoNParts(originalByteArr, currentSplit)) {
+                                fromCharCodedPiece = String.fromCharCode(...byteArr);
+                                fromCharCoded += fromCharCodedPiece;
+
+                            }
+                            hasError = false;
+                        }
+                        catch (err1) {
+                            currentSplit += 1;
+                        }
+                    }
+                    const base64Encoded = btoa(fromCharCoded);
+                    window.location.hash = base64Encoded;
+                    writeToLog("Permalink built!");
+                    finishedCompression = true;
+                } catch (err) {
+                    writeToLog("Error creating permalink: " + err);
+                    finishedCompression = true;
+                }
             }, function on_compress_progress_update(percent) {});
+
+            while (!finishedCompression) {
+                await sleep(500);
+            }
         }
 
         async function loadAndRunScript(data, fromPermalink) {
@@ -491,7 +534,7 @@
                 writeToLog("Table built!");
                 if (fromPermalink == false) {
                     writeToLog("Building permalink...");
-                    compressAndEncode(data);
+                    await compressAndEncode(data);
                 }
                 writeToLog("Finished.");
             }
