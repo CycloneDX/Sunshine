@@ -1,9 +1,13 @@
+__all__ = [
+  # This modulde does not export any symbols; all sumbols are private/internal.
+]
+
+
 import json
 import argparse
 import os
 import html
 import copy
-
 
 VERSION = "0.9"
 NAME = "Sunshine"
