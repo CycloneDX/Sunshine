@@ -30,7 +30,7 @@ VERSION = "0.9"
 NAME = "Sunshine"
 
 PREFERRED_VULNERABILITY_RATING_METHODS_ORDER = ["CVSSv4",
-                                                "CVSSv31"
+                                                "CVSSv31",
                                                 "CVSSv3",
                                                 "CVSSv2",
                                                 "OWASP",
@@ -115,7 +115,7 @@ HTML_TEMPLATE = """
             position: relative;
         }
 
-        #chart-container-inner {
+        #chart-container-inner, #chart-container-only-vulnerable-inner {
             background-color: #ffffff;
             padding: 10px;
             position: relative;
@@ -256,7 +256,21 @@ HTML_TEMPLATE = """
         <li><b>Clicking:</b> refocuses the chart. The clicked segment becomes the center (second innermost circle), showing only that component and its dependencies. In this view, the innermost circle is always blue. Clicking the blue circle navigates back up one level in the dependency hierarchy.</li>
     </ul>
     <hr>
-    <div id="chart-container-inner"></div>
+    <div class="form-check">
+      <input class="form-check-input" type="radio" name="showComponentsSwitch" id="allComponents" value="allComponents" checked onchange="handleShowComponentsSwitchChange(this)">
+      <label class="form-check-label" for="allComponents">
+        Show all components
+      </label>
+    </div>
+    <div class="form-check">
+      <input class="form-check-input" type="radio" name="showComponentsSwitch" id="vulnerableComponents" value="vulnerableComponents" onchange="handleShowComponentsSwitchChange(this)">
+      <label class="form-check-label" for="vulnerableComponents">
+        Show only components with direct or transitive vulnerabilities
+      </label>
+    </div>
+    <hr>
+    <div id="chart-container-inner" style="display: block"></div>
+    <div id="chart-container-only-vulnerable-inner" style="display: none"></div>
     </div>
     <br>
     <h3  class="light-text">Components table</h3>
@@ -287,68 +301,135 @@ HTML_TEMPLATE = """
             </div>
     </div>
     <script type="text/javascript">
-var dom = document.getElementById('chart-container-inner');
-var myChart = echarts.init(dom, null, {
-  renderer: 'canvas',
-  useDirtyRect: false
-});
-var app = {};
+        function showDiv(divId) {
+            var div = document.getElementById(divId);
+            if (div.style.display === "none") {
+                div.style.display = "block";
+            }
+        }
 
-var option;
+        function hideDiv(divId) {
+            var div = document.getElementById(divId);
+            if (div.style.display === "block") {
+                div.style.display = "none";
+            }
+        }
 
-const data = <CHART_DATA_HERE>;
+        function handleShowComponentsSwitchChange(radio) {
+            if (radio.value == "allComponents") {
+                hideDiv("chart-container-only-vulnerable-inner");
+                showDiv("chart-container-inner");
+                var shownChart = echarts.getInstanceByDom(document.getElementById("chart-container-inner"));
+                shownChart.resize();
+            }
+            else if (radio.value == "vulnerableComponents") {
+                hideDiv("chart-container-inner");
+                showDiv("chart-container-only-vulnerable-inner");
+                var shownChart = echarts.getInstanceByDom(document.getElementById("chart-container-only-vulnerable-inner"));
+                shownChart.resize();
+            }
+        }
 
-option = {
-  tooltip: {
-        formatter: function(params) {
-            return `${params.name}`;
-        },
-    },
-  series: {
-    radius: ['15%', '100%'],
-    type: 'sunburst',
-    sort: undefined,
-    emphasis: {
-      focus: 'ancestor'
-    },
-    data: data,
-    label: {
-      rotate: 'radial',
-      show: false
-    },
-    levels: []
-  }
-};
+        var dom = document.getElementById('chart-container-inner');
+        var myChart = echarts.init(dom, null, {
+          renderer: 'canvas',
+          useDirtyRect: false
+        });
+        var app = {};
 
-if (option && typeof option === 'object') {
-  myChart.setOption(option);
-}
+        var option;
 
-window.addEventListener('resize', myChart.resize);
+        const data = <CHART_DATA_HERE>;
 
-let table = $('#components-table').DataTable({
-    "order": [[ 1, "asc" ]],
-    pageLength: 10,
-    dom: 'Blfrtip',
-    lengthMenu: [
-        [10, 25, 50, -1],
-        [10, 25, 50, 'All']
-    ],
-    buttons: [
-      { extend: 'copy', className: 'btn btn-dark mb-3 btn-sm' },
-      { extend: 'csv', className: 'btn btn-secondary mb-3 btn-sm' },
-      { extend: 'excel', className: 'btn btn-success mb-3 btn-sm' },
-      { extend: 'pdf', className: 'btn btn-danger mb-3 btn-sm' },
-      { extend: 'print', className: 'btn btn-info mb-3 btn-sm' }
-    ],
-    orderCellsTop: true,
-    "autoWidth": true
-  });
+        option = {
+          tooltip: {
+                formatter: function(params) {
+                    return `${params.name}`;
+                },
+            },
+          series: {
+            radius: ['15%', '100%'],
+            type: 'sunburst',
+            sort: undefined,
+            emphasis: {
+              focus: 'ancestor'
+            },
+            data: data,
+            label: {
+              rotate: 'radial',
+              show: false
+            },
+            levels: []
+          }
+        };
 
-$('#components-table thead input').on('keyup change', function () {
-    let columnIndex = $(this).parent().index();
-    table.column(columnIndex).search(this.value).draw();
-});
+        if (option && typeof option === 'object') {
+          myChart.setOption(option);
+        }
+
+        window.addEventListener('resize', myChart.resize);
+
+        var domVuln = document.getElementById('chart-container-only-vulnerable-inner');
+        var myChartVuln = echarts.init(domVuln, null, {
+          renderer: 'canvas',
+          useDirtyRect: false
+        });
+
+        var optionVuln;
+
+        const dataVuln = <CHART_DATA_VULN_HERE>;
+
+        optionVuln = {
+          tooltip: {
+                formatter: function(params) {
+                    return `${params.name}`;
+                },
+            },
+          series: {
+            radius: ['15%', '100%'],
+            type: 'sunburst',
+            sort: undefined,
+            emphasis: {
+              focus: 'ancestor'
+            },
+            data: dataVuln,
+            label: {
+              rotate: 'radial',
+              show: false
+            },
+            levels: []
+          }
+        };
+
+        if (optionVuln && typeof optionVuln === 'object') {
+          myChartVuln.setOption(optionVuln);
+        }
+
+        window.addEventListener('resize', myChartVuln.resize);
+
+        let table = $('#components-table').DataTable({
+            "order": [[ 1, "asc" ]],
+            pageLength: 10,
+            dom: 'Blfrtip',
+            lengthMenu: [
+                [10, 25, 50, -1],
+                [10, 25, 50, 'All']
+            ],
+            buttons: [
+              { extend: 'copy', className: 'btn btn-dark mb-3 btn-sm' },
+              { extend: 'csv', className: 'btn btn-secondary mb-3 btn-sm' },
+              { extend: 'excel', className: 'btn btn-success mb-3 btn-sm' },
+              { extend: 'pdf', className: 'btn btn-danger mb-3 btn-sm' },
+              { extend: 'print', className: 'btn btn-info mb-3 btn-sm' }
+            ],
+            orderCellsTop: true,
+            "autoWidth": true
+          });
+
+        $('#components-table thead input').on('keyup change', function () {
+            let columnIndex = $(this).parent().index();
+            table.column(columnIndex).search(this.value).draw();
+        });
       </script>
       <br><br>
       <div id="footer">Sunshine - SBOM visualization tool by <a href="https://www.linkedin.com/in/lucacapacci/">Luca Capacci</a> | <a href="https://github.com/lucacapacci/Sunshine/">GitHub repository</a> | <a href="https://github.com/lucacapacci/Sunshine/blob/main/LICENSE">License</a> | <a href="https://github.com/lucacapacci/Sunshine/blob/main/THIRD_PARTY_LICENSES">Third party licenses</a></div>
@@ -1068,6 +1149,37 @@ def write_output_file(html_content, output_file_path):
         text_file.write(html_content)
 
 
+def get_only_vulnerable_components(components):
+    vulnerable_components = {}
+
+    # populate vulnerable components
+    for component_bom_ref, component in components.items():
+        if len(component["vulnerabilities"]) == 0 and len(component["transitive_vulnerabilities"]) == 0:
+            continue  # component is not vulnerable in any way
+        
+        vulnerable_component = {"name": component["name"],
+                                "version": component["version"],
+                                "type": component["type"],
+                                "license": copy.deepcopy(component["license"]),
+                                "depends_on": copy.deepcopy(component["depends_on"]),
+                                "dependency_of": copy.deepcopy(component["dependency_of"]),
+                                "vulnerabilities": copy.deepcopy(component["vulnerabilities"]),
+                                "transitive_vulnerabilities": copy.deepcopy(component["transitive_vulnerabilities"]),
+                                "max_vulnerability_severity": component["max_vulnerability_severity"],
+                                "has_transitive_vulnerabilities": component["has_transitive_vulnerabilities"],
+                                "visited": False}
+        vulnerable_components[component_bom_ref] = vulnerable_component
+
+    # clean not vulnerable dependency relationships
+    vulnerable_components_bom_refs = set(vulnerable_components.keys())
+    for component_bom_ref, component in vulnerable_components.items():
+        vulnerable_depends_on = set(component["depends_on"]) & vulnerable_components_bom_refs
+        component["depends_on"] = vulnerable_depends_on
+        vulnerable_dependency_of = set(component["dependency_of"]) & vulnerable_components_bom_refs
+        component["dependency_of"] = vulnerable_dependency_of
+
+    return vulnerable_components
+
 def main_cli(input_file_path, output_file_path):
     if not os.path.exists(input_file_path):
         custom_print(f"File does not exist: '{input_file_path}'")
@@ -1079,12 +1191,19 @@ def main_cli(input_file_path, output_file_path):
         custom_print(f"Error parsing input file: {e}")
         exit()
 
-    echart_data = build_echarts_data(components)
-    double_check_if_all_components_were_taken_into_account(components, echart_data)
+    # chart with all components
+    echart_data_all_components = build_echarts_data(components)
+    double_check_if_all_components_were_taken_into_account(components, echart_data_all_components)
+
+    # chart with only vulnerable components
+    vulnerable_components = get_only_vulnerable_components(components)
+    echart_data_vulnerable_components = build_echarts_data(vulnerable_components)
+    double_check_if_all_components_were_taken_into_account(vulnerable_components, echart_data_vulnerable_components)
 
     table_content = build_table_content(components)
     
-    html_content = HTML_TEMPLATE.replace("<CHART_DATA_HERE>", json.dumps(echart_data, indent=2))
+    html_content = HTML_TEMPLATE.replace("<CHART_DATA_HERE>", json.dumps(echart_data_all_components, indent=2))
+    html_content = html_content.replace("<CHART_DATA_VULN_HERE>", json.dumps(echart_data_vulnerable_components, indent=2))
     html_content = html_content.replace("<FILE_NAME_HERE>", html.escape(os.path.basename(input_file_path)))
     html_content = html_content.replace("<TABLE_HERE>", table_content)
     
@@ -1099,13 +1218,20 @@ def main_web(input_string):
         custom_print(f"Error parsing input string: {e}")
         exit()
 
-    echart_data = build_echarts_data(components)
-    double_check_if_all_components_were_taken_into_account(components, echart_data)
+    # chart with all components
+    echart_data_all_components = build_echarts_data(components)
+    double_check_if_all_components_were_taken_into_account(components, echart_data_all_components)
+    echart_data_all_components = json.dumps(echart_data_all_components, indent=2)
 
-    echart_data = json.dumps(echart_data, indent=2)
+    # chart with only vulnerable components
+    vulnerable_components = get_only_vulnerable_components(components)
+    echart_data_vulnerable_components = build_echarts_data(vulnerable_components)
+    double_check_if_all_components_were_taken_into_account(vulnerable_components, echart_data_vulnerable_components)
+    echart_data_vulnerable_components = json.dumps(echart_data_vulnerable_components, indent=2)
+
     table_content = build_table_content(components)
     
-    return echart_data, table_content
+    return echart_data_all_components, echart_data_vulnerable_components, table_content
 
 
 if __name__ == "__main__":
@@ -1135,7 +1261,8 @@ if __name__ == "__main__":
 
 
 if __name__ == "__web__":
-    echart_data, table_content = main_web(INPUT_DATA)
-    OUTPUT_CHART_DATA = echart_data
+    echart_data_all_components, echart_data_vulnerable_components, table_content = main_web(INPUT_DATA)
+    OUTPUT_CHART_DATA = echart_data_all_components
+    OUTPUT_CHART_DATA_VULNERABLE_COMPONENTS = echart_data_vulnerable_components
     OUTPUT_TABLE_DATA = table_content
 

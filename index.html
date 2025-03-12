@@ -45,7 +45,7 @@
             position: relative;
         }
 
-        #chart-container-inner {
+        #chart-container-inner, #chart-container-only-vulnerable-inner {
             background-color: #ffffff;
             padding: 10px;
             position: relative;
@@ -191,7 +191,21 @@
         <li><b>Clicking:</b> refocuses the chart. The clicked segment becomes the center (second innermost circle), showing only that component and its dependencies. In this view, the innermost circle is always blue. Clicking the blue circle navigates back up one level in the dependency hierarchy.</li>
     </ul>
     <hr>
-    <div id="chart-container-inner"></div>
+    <div class="form-check">
+      <input class="form-check-input" type="radio" name="showComponentsSwitch" id="allComponents" value="allComponents" checked onchange="handleShowComponentsSwitchChange(this)">
+      <label class="form-check-label" for="allComponents">
+        Show all components
+      </label>
+    </div>
+    <div class="form-check">
+      <input class="form-check-input" type="radio" name="showComponentsSwitch" id="vulnerableComponents" value="vulnerableComponents" onchange="handleShowComponentsSwitchChange(this)">
+      <label class="form-check-label" for="vulnerableComponents">
+        Show only components with direct or transitive vulnerabilities
+      </label>
+    </div>
+    <hr>
+    <div id="chart-container-inner" style="display: block"></div>
+    <div id="chart-container-only-vulnerable-inner" style="display: none"></div>
     </div>
     <div id="chart-container-placeholder" style="display: block">
         Chart will appear here...
@@ -278,8 +292,8 @@
             }
         }
 
-        function renderChart(data) {
-            var dom = document.getElementById('chart-container-inner');
+        function renderChart(data, chartId) {
+            var dom = document.getElementById(chartId);
             var myChart = echarts.init(dom, null, {
               renderer: 'canvas',
               useDirtyRect: false
@@ -337,6 +351,29 @@
             if (div.style.display === "block") {
                 div.style.display = "none";
             }
+        }
+
+        function handleShowComponentsSwitchChange(radio) {
+            if (radio.value == "allComponents") {
+                hideDiv("chart-container-only-vulnerable-inner");
+                showDiv("chart-container-inner");
+                var shownChart = echarts.getInstanceByDom(document.getElementById("chart-container-inner"));
+                shownChart.resize();
+            }
+            else if (radio.value == "vulnerableComponents") {
+                hideDiv("chart-container-inner");
+                showDiv("chart-container-only-vulnerable-inner");
+                var shownChart = echarts.getInstanceByDom(document.getElementById("chart-container-only-vulnerable-inner"));
+                shownChart.resize();
+            }
+        }
+
+        function resetShowComponentsSwitch() {
+            var allComponents = document.getElementById('allComponents');
+            var vulnerableComponents = document.getElementById('vulnerableComponents');
+            allComponents.checked = true;
+            vulnerableComponents.checked = false;
+            handleShowComponentsSwitchChange(allComponents);
         }
 
         document.getElementById('file-input').addEventListener('change', handleFile);
@@ -526,8 +563,13 @@
                 writeToLog("Building chart...");
                 hideDiv("chart-container-placeholder");
                 showDiv("chart-container");
-                renderChart(JSON.parse(echartData));
+                renderChart(JSON.parse(echartData), 'chart-container-inner');
                 writeToLog("Chart built!");
+                let echartDataVulnerableComponents = pyodideInstance.globals.get('OUTPUT_CHART_DATA_VULNERABLE_COMPONENTS');
+                writeToLog("Building chart with only vulnerable components...");
+                renderChart(JSON.parse(echartDataVulnerableComponents), 'chart-container-only-vulnerable-inner');
+                writeToLog("Chart built!");
+                resetShowComponentsSwitch();
                 let tableContent = pyodideInstance.globals.get('OUTPUT_TABLE_DATA');
                 writeToLog("Building table...");
                 renderTable(tableContent);
