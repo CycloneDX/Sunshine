@@ -15,12 +15,16 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) OWASP Foundation. All Rights Reserved.
 
+
+__all__ = [
+  # This module does not export any symbols; all sumbols are private/internal.
+]
+
 import json
 import argparse
 import os
 import html
 import copy
-
 
 VERSION = "0.9"
 NAME = "Sunshine"
