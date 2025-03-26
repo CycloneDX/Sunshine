@@ -59,13 +59,13 @@
             border-radius: 4px;
         }
 
-        #table-container {
+        #table-container, #info-table-container {
             background-color: #fffffF;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
         }
-        #table-container-placeholder {
+        #table-container-placeholder, #info-table-container-placeholder {
             background-color: #fffffF;
             padding: 10px;
             border: 1px solid #ddd;
@@ -149,6 +149,14 @@
         #footer a {
             color: #baccde;
         }
+
+        #info-table_paginate, #info-table_length, #info-table_info {
+            display: none;
+        }
+
+        .opaque {
+            opacity: 0.5;
+        }
     
     </style>
 </head>
@@ -163,6 +171,16 @@
             <li>If your SBOM file is not in the CycloneDX JSON format, such as SPDX or CycloneDX XML, you can convert it using <a href="https://CycloneDX.github.io/cyclonedx-web-tool/convert">CycloneDX Web Tool.</a></li>
             <li>If you prefer using a standalone CLI version <a href="https://github.com/CycloneDX/Sunshine/">download it here.</a></li>
         </ul>
+    </div>
+
+
+    <br>
+    <h3 class="light-text">Summary</h3>
+    <div id="info-table-container" style="display: none">
+        <table id="info-table" class="table table-striped table-bordered" style="width:100%"></table>
+    </div>
+    <div id="info-table-container-placeholder" style="display: block">
+       Summary table will appear here...
     </div>
         
     <br>
@@ -239,7 +257,7 @@
         </div>
     </div>
     <div id="table-container-placeholder" style="display: block">
-        Table will appear here...
+        Components table will appear here...
     </div>
     <br>
     <h3 class="light-text">Log</h3>
@@ -341,16 +359,12 @@
 
         function showDiv(divId) {
             var div = document.getElementById(divId);
-            if (div.style.display === "none") {
-                div.style.display = "block";
-            }
+            div.style.display = "block";
         }
 
         function hideDiv(divId) {
             var div = document.getElementById(divId);
-            if (div.style.display === "block") {
-                div.style.display = "none";
-            }
+            div.style.display = "none";
         }
 
         function handleShowComponentsSwitchChange(radio) {
@@ -384,6 +398,8 @@
             showDiv("chart-container-placeholder");
             hideDiv("table-container");
             showDiv("table-container-placeholder");
+            hideDiv("info-table-container");
+            showDiv("info-table-container-placeholder");
             writeToLog("~~~~~~~~~~~~~~~ New file selected ~~~~~~~~~~~~~~~");
             var reader = new FileReader();
             reader.onload = function(e) {
@@ -397,16 +413,24 @@
             reader.readAsText(file);
         }
 
-        var table = null;
+        var componentsTable = null;
+        var infoTable = null;
 
-        function renderTable(tableContent) {
-            document.getElementById("components-table").innerHTML = tableContent;
+        function renderTable(tableContent, tableId, showContainerId, placeholderContainerId, searchInTableClass) {
+            var table = null;
+            if (tableId == "components-table") {
+                table = componentsTable;
+            }
+            else {
+                table = infoTable;
+            }
             if (table) {
                 table.destroy();
                 table = null;
             }
+            document.getElementById(tableId).innerHTML = tableContent;
             if (!table) {
-                table = $('#components-table').DataTable({
+                table = $('#' + tableId).DataTable({
                     "order": [[ 0, "asc" ]],
                     pageLength: 10,
                     dom: 'Blfrtip',
@@ -447,19 +471,28 @@
                     
                   });
 
-                $('#components-table thead input').on('keyup change', function () {
+                $('#' + tableId + ' thead input').on('keyup change', function () {
                     let columnIndex = $(this).parent().index();
                     table.column(columnIndex).search(this.value).draw();
                 });
 
-                $('.search-in-table').on('keyup change', function () {
-                    let columnIndex = $(this).parent().index();
-                    table.column(columnIndex).search(this.value).draw();
-                });
+                if (searchInTableClass != null) {
+                    $('.' + searchInTableClass).on('keyup change', function () {
+                        let columnIndex = $(this).parent().index();
+                        table.column(columnIndex).search(this.value).draw();
+                    });
+                }
             }
 
-            showDiv("table-container");
-            hideDiv("table-container-placeholder");
+            if (tableId == "components-table") {
+                componentsTable = table;
+            }
+            else {
+                infoTable = table;
+            }
+
+            showDiv(showContainerId);
+            hideDiv(placeholderContainerId);
 
             table.columns.adjust();
 
@@ -570,14 +603,19 @@
                 renderChart(JSON.parse(echartDataVulnerableComponents), 'chart-container-only-vulnerable-inner');
                 writeToLog("Chart built!");
                 resetShowComponentsSwitch();
-                let tableContent = pyodideInstance.globals.get('OUTPUT_TABLE_DATA');
-                writeToLog("Building table...");
-                renderTable(tableContent);
-                writeToLog("Table built!");
-                if (fromPermalink == false) {
+                let componentsTableContent = pyodideInstance.globals.get('OUTPUT_COMPONENTS_TABLE_DATA');
+                writeToLog("Building components table...");
+                renderTable(componentsTableContent, "components-table", "table-container", "table-container-placeholder", "search-in-table-comp");
+                writeToLog("Table components built!");
+                let metadataTableContent = pyodideInstance.globals.get('OUTPUT_METADATA_TABLE_DATA');
+                writeToLog("Building summary table...");
+                renderTable(metadataTableContent, "info-table", "info-table-container", "info-table-container-placeholder", null);
+                writeToLog("Summary table built!");
+
+                /*if (fromPermalink == false) {
                     writeToLog("Building permalink...");
                     await compressAndEncode(data);
-                }
+                }*/
                 writeToLog("Finished.");
             }
         }

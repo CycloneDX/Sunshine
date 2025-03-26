@@ -129,13 +129,13 @@ HTML_TEMPLATE = """
             border-radius: 4px;
         }
 
-        #table-container {
+        #table-container, #info-table-container {
             background-color: #fffffF;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
         }
-        #table-container-placeholder {
+        #table-container-placeholder, #info-table-container-placeholder {
             background-color: #fffffF;
             padding: 10px;
             border: 1px solid #ddd;
@@ -219,6 +219,14 @@ HTML_TEMPLATE = """
         #footer a {
             color: #baccde;
         }
+
+        #info-table_paginate, #info-table_length, #info-table_info {
+            display: none;
+        }
+
+        .opaque {
+            opacity: 0.5;
+        }
     
     </style>
 </head>
@@ -230,6 +238,13 @@ HTML_TEMPLATE = """
     <div id="upload-file-container">
         <span>Analyzed CycloneDX JSON file: <i><FILE_NAME_HERE></i></span>
     </div>
+
+    <br>
+    <h3 class="light-text">Summary</h3>
+    <div id="info-table-container">
+        <table id="info-table" class="table table-striped table-bordered" style="width:100%"><METADATA_TABLE_HERE></table>
+    </div>
+
     <br><br>
     <h3  class="light-text">Components chart</h3>
     <div id="chart-container">
@@ -297,7 +312,7 @@ HTML_TEMPLATE = """
         </ul>
         <hr><br>
             <div id="table-container-inner">
-                <table id="components-table" class="table table-striped table-bordered" style="width:100%"><TABLE_HERE></table>
+                <table id="components-table" class="table table-striped table-bordered" style="width:100%"><COMPONENTS_TABLE_HERE></table>
             </div>
     </div>
     <script type="text/javascript">
@@ -420,7 +435,27 @@ HTML_TEMPLATE = """
               { extend: 'csv', className: 'btn btn-secondary mb-3 btn-sm' },
               { extend: 'excel', className: 'btn btn-success mb-3 btn-sm' },
               { extend: 'pdf', className: 'btn btn-danger mb-3 btn-sm' },
-              { extend: 'print', className: 'btn btn-info mb-3 btn-sm' }
+              { extend: 'print', className: 'btn btn-info mb-3 btn-sm', 
+                customize: function (win) {
+                    $(win.document.body).css('font-size', '10pt');
+                    $(win.document.body).find('table').addClass('compact').css('font-size', 'inherit');
+
+                    // Add landscape mode
+                    var css = '@page { size: landscape; }',
+                        head = win.document.head || win.document.getElementsByTagName('head')[0],
+                        style = win.document.createElement('style');
+
+                    style.type = 'text/css';
+                    style.media = 'print';
+
+                    if (style.styleSheet) {
+                        style.styleSheet.cssText = css;
+                    } else {
+                        style.appendChild(win.document.createTextNode(css));
+                    }
+                    head.appendChild(style);
+                }
+              }
             ],
             orderCellsTop: true,
             "autoWidth": true
@@ -430,6 +465,45 @@ HTML_TEMPLATE = """
             let columnIndex = $(this).parent().index();
             table.column(columnIndex).search(this.value).draw();
         });
+
+        let summaryTable = $('#info-table').DataTable({
+            "order": [[ 1, "asc" ]],
+            pageLength: 10,
+            dom: 'Blfrtip',
+            lengthMenu: [
+                [10, 25, 50, -1],
+                [10, 25, 50, 'All']
+            ],
+            buttons: [
+              { extend: 'copy', className: 'btn btn-dark mb-3 btn-sm' },
+              { extend: 'csv', className: 'btn btn-secondary mb-3 btn-sm' },
+              { extend: 'excel', className: 'btn btn-success mb-3 btn-sm' },
+              { extend: 'pdf', className: 'btn btn-danger mb-3 btn-sm' },
+              { extend: 'print', className: 'btn btn-info mb-3 btn-sm', 
+                customize: function (win) {
+                    $(win.document.body).css('font-size', '10pt');
+                    $(win.document.body).find('table').addClass('compact').css('font-size', 'inherit');
+
+                    // Add landscape mode
+                    var css = '@page { size: landscape; }',
+                        head = win.document.head || win.document.getElementsByTagName('head')[0],
+                        style = win.document.createElement('style');
+
+                    style.type = 'text/css';
+                    style.media = 'print';
+
+                    if (style.styleSheet) {
+                        style.styleSheet.cssText = css;
+                    } else {
+                        style.appendChild(win.document.createTextNode(css));
+                    }
+                    head.appendChild(style);
+                }
+              }
+            ],
+            orderCellsTop: true,
+            "autoWidth": true
+          });
       </script>
       <br><br>
       <div id="footer">Sunshine - SBOM visualization tool by <a href="https://www.linkedin.com/in/lucacapacci/">Luca Capacci</a> | <a href="https://github.com/lucacapacci/Sunshine/">GitHub repository</a> | <a href="https://github.com/lucacapacci/Sunshine/blob/main/LICENSE">License</a> | <a href="https://github.com/lucacapacci/Sunshine/blob/main/THIRD_PARTY_LICENSES">Third party licenses</a></div>
@@ -500,6 +574,7 @@ def parse_vulnerability_data(vulnerability):
     vuln_id = vulnerability["id"]
 
     vuln_severity = None
+    vuln_score = 0.0
     if "ratings" in vulnerability:
         for rating in vulnerability["ratings"]:
             if "method" not in rating:
@@ -512,9 +587,12 @@ def parse_vulnerability_data(vulnerability):
                             if rating_vuln_severity.lower() == "info":
                                 rating_vuln_severity = "information"
                             vuln_severity = rating_vuln_severity.lower()
+                            if "score" in rating:
+                                vuln_score = float(rating["score"])
                             break
                     if "score" in rating:
                         vuln_severity = get_severity_by_score(rating["score"])
+                        vuln_score = float(rating["score"])
                         break
 
 
@@ -531,22 +609,32 @@ def parse_vulnerability_data(vulnerability):
                     rating_vuln_severity = rating["severity"]
                     if rating_vuln_severity.lower() in VALID_SEVERITIES:
                         vuln_severity = rating_vuln_severity.lower()
+                        if "score" in rating:
+                                vuln_score = float(rating["score"])
                         break
                 if "score" in rating:
                     vuln_severity = get_severity_by_score(rating["score"])
+                    vuln_score = float(rating["score"])
                     break
 
     if vuln_severity is None:
         custom_print(f"WARNING: could not detect severity of vulnerability with id '{vulnerability['id']}'. I'll set a default 'INFORMATION' severity...")
         vuln_severity = get_severity_by_score(0)
 
-    return vuln_id, vuln_severity
+    return vuln_id, vuln_severity, vuln_score
 
 
+bom_ref_cache = {}
 def get_bom_ref(component_json, all_bom_refs):
+    global bom_ref_cache
     if "bom-ref" in component_json:
         bom_ref = component_json["bom-ref"]
+        return bom_ref
     else:
+        bom_ref_cache_key = f"{component_json['name']} - {component_json['version']}"
+        if bom_ref_cache_key in bom_ref_cache:
+            return bom_ref_cache[f"{component_json['name']} - {component_json['version']}"]
+
         custom_print(f"WARNING: component with name '{component_json['name']}' and version '{component_json['version']}' does not have a 'bom-ref'. I'll search for a match...")
         for potential_bom_ref in all_bom_refs:
             guessed_name_01 = f'{component_json["name"]}@{component_json["version"]}'
@@ -556,14 +644,18 @@ def get_bom_ref(component_json, all_bom_refs):
             for test in [guessed_name_01, guessed_name_02, guessed_name_03]:
                 if potential_bom_ref.endswith(f"/{test}"):
                     custom_print(f"Match found: {potential_bom_ref}")
+                    bom_ref_cache[bom_ref_cache_key] = potential_bom_ref
                     return potential_bom_ref
                 if potential_bom_ref.endswith(f"/{test}:"):
                     custom_print(f"Match found: {potential_bom_ref}")
+                    bom_ref_cache[bom_ref_cache_key] = potential_bom_ref
                     return potential_bom_ref
                 if potential_bom_ref.endswith(f":{test}"):
+                    bom_ref_cache[bom_ref_cache_key] = potential_bom_ref
                     custom_print(f"Match found: {potential_bom_ref}")
                     return potential_bom_ref
                 if potential_bom_ref.endswith(f":{test}:"):
+                    bom_ref_cache[bom_ref_cache_key] = potential_bom_ref
                     custom_print(f"Match found: {potential_bom_ref}")
                     return potential_bom_ref
 
@@ -583,11 +675,13 @@ def get_bom_ref(component_json, all_bom_refs):
                     number_of_results += 1
                     result = potential_bom_ref
         if number_of_results == 1:  # I want just one result, otherwise it means the sbom is ambiguous and I can't make any educated guess
+            bom_ref_cache[bom_ref_cache_key] = result
             return result
 
         custom_print(f"Match not found. I'll create a fake one.")
         bom_ref = f"{hash(json.dumps(component_json, sort_keys=True, cls=SetEncoder))}"
-    return bom_ref
+        bom_ref_cache[bom_ref_cache_key] = bom_ref
+        return bom_ref
 
 
 def create_or_update_bom_ref_entry(bom_refs, component):
@@ -688,6 +782,7 @@ def detect_nested_bom_refs(component, bom_refs):
                 if "bom-ref" in sub_component:
                     create_or_update_bom_ref_entry(bom_refs, sub_component)
 
+
 def get_all_bom_refs(data):
     bom_refs = {}
     meta_bom_ref_is_used = False
@@ -743,8 +838,67 @@ def parse_licenses(component):
     return sorted(list(licenses))
 
 
+def parse_metadata(data):
+    metadata_info = {}
+
+    metadata_field = None
+
+    if "metadata" in data:
+        metadata_field = data["metadata"]
+
+    if metadata_field is not None:
+        if "component" in metadata_field:
+            metadata_info["Main Component"] = {}
+            if "type" in metadata_field["component"]:
+                metadata_info["Main Component"]["Type"] = metadata_field["component"]["type"]
+            if "group" in metadata_field["component"]:
+                metadata_info["Main Component"]["Group"] = metadata_field["component"]["group"]
+            if "name" in metadata_field["component"]:
+                metadata_info["Main Component"]["Name"] = metadata_field["component"]["name"]
+            if "version" in metadata_field["component"]:
+                metadata_info["Main Component"]["Version"] = metadata_field["component"]["version"]
+            if "description" in metadata_field["component"]:
+                metadata_info["Main Component"]["Description"] = metadata_field["component"]["description"]
+            if "purl" in metadata_field["component"]:
+                metadata_info["Main Component"]["PURL"] = metadata_field["component"]["purl"]
+
+            if "properties" in metadata_field["component"]:
+                for property_element in metadata_field["component"]["properties"]:
+                    metadata_info["Main Component"][f'{property_element["name"][0].capitalize()}{property_element["name"][1:]}'] = property_element["value"]
+
+    if "specVersion" in data:
+        metadata_info["Spec Version"] = data["specVersion"]
+
+    if "serialNumber" in data:
+        metadata_info["Serial Number"] = data["serialNumber"]
+
+    if "version" in data:
+        metadata_info["Version"] = str(data["version"])
+
+    if metadata_field is not None:
+        if "tools" in metadata_field:
+            counter = 0
+            for tool in metadata_field["tools"]:
+                counter += 1
+                info_id = "Tool"
+                if len(metadata_field["tools"]) > 1:
+                    info_id = f"{info_id} #{counter}"
+
+                metadata_info[info_id] = {}
+                if "vendor" in tool:
+                    metadata_info[info_id]["Vendor"] = tool["vendor"]
+                if "name" in tool:
+                    metadata_info[info_id]["Name"] = tool["name"]
+                if "version" in tool:
+                    metadata_info[info_id]["Version"] = tool["version"]
+
+    return metadata_info
+
+
 def parse_json_data(data):
     all_bom_refs, meta_bom_ref_is_used = get_all_bom_refs(data)
+
+    guessed_bom_refs_cache = {}
 
     components = {}
 
@@ -762,6 +916,8 @@ def parse_json_data(data):
                 bom_ref = get_bom_ref(component, all_bom_refs)
                 components[bom_ref] = new_component
 
+    metadata_info = parse_metadata(data)
+
     for root_keyword in root_keywords:
         for component in data[root_keyword]:
             new_component = create_base_component(component)
@@ -777,14 +933,19 @@ def parse_json_data(data):
                 for dependency in component["dependencies"]:
                     depends_on = dependency["ref"]
                     if depends_on not in components:
-                        custom_print(f"WARNING: 'ref' '{depends_on}' is used in 'dependencies' inside a component but it's not declared in 'components'. I'll search for a match...")
-                        guessed_bom_ref = normalize_bom_ref(all_bom_refs, depends_on)
-                        if guessed_bom_ref is None:
-                            custom_print(f"Match not found. I'll create a fake one.")
-                            components[depends_on] = create_fake_component(depends_on)
+                        if depends_on in guessed_bom_refs_cache:
+                            depends_on = guessed_bom_refs_cache[depends_on]
                         else:
-                            custom_print(f"Match found: {guessed_bom_ref}")
-                            depends_on = guessed_bom_ref
+                            custom_print(f"WARNING: 'ref' '{depends_on}' is used in 'dependencies' inside a component but it's not declared in 'components'. I'll search for a match...")
+                            guessed_bom_ref = normalize_bom_ref(all_bom_refs, depends_on)
+                            guessed_bom_refs_cache[depends_on] = guessed_bom_ref
+
+                            if guessed_bom_ref is None:
+                                custom_print(f"Match not found. I'll create a fake one.")
+                                components[depends_on] = create_fake_component(depends_on)
+                            else:
+                                custom_print(f"Match found: {guessed_bom_ref}")
+                                depends_on = guessed_bom_ref
 
                     components[bom_ref]["depends_on"].add(depends_on)
                     components[depends_on]["dependency_of"].add(bom_ref)
@@ -795,9 +956,9 @@ def parse_json_data(data):
 
             if "vulnerabilities" in component:
                 for vulnerability in component["vulnerabilities"]:
-                    vuln_id, vuln_severity = parse_vulnerability_data(vulnerability)
+                    vuln_id, vuln_severity, vuln_score = parse_vulnerability_data(vulnerability)
 
-                    vulnerability_data = {"id": vuln_id, "severity": vuln_severity}
+                    vulnerability_data = {"id": vuln_id, "severity": vuln_severity, "score": vuln_score}
                     if vulnerability_data not in components[bom_ref]["vulnerabilities"]:
                         components[bom_ref]["vulnerabilities"].append(vulnerability_data)
                     if VALID_SEVERITIES[vuln_severity] > VALID_SEVERITIES[components[bom_ref]["max_vulnerability_severity"]]:
@@ -807,33 +968,41 @@ def parse_json_data(data):
         for dependency in data["dependencies"]:
             bom_ref = dependency["ref"]
             if bom_ref not in components:
-                custom_print(f"WARNING: 'ref' '{bom_ref}' is used in 'dependencies' but it's not declared in 'components'. I'll search for a match...")
-                guessed_bom_ref = normalize_bom_ref(all_bom_refs, bom_ref)
-                if guessed_bom_ref is None:
-                    custom_print(f"Match not found. I'll create a fake one.")
-                    components[bom_ref] = create_fake_component(bom_ref)
+                if bom_ref in guessed_bom_refs_cache:
+                    bom_ref = guessed_bom_refs_cache[bom_ref]
                 else:
-                    custom_print(f"Match found: {guessed_bom_ref}")
-                    bom_ref = guessed_bom_ref
+                    custom_print(f"WARNING: 'ref' '{bom_ref}' is used in 'dependencies' in a 'ref' field but it's not declared in 'components'. I'll search for a match...")
+                    guessed_bom_ref = normalize_bom_ref(all_bom_refs, bom_ref)
+                    guessed_bom_refs_cache[bom_ref] = guessed_bom_ref
+                    if guessed_bom_ref is None:
+                        custom_print(f"Match not found. I'll create a fake one.")
+                        components[bom_ref] = create_fake_component(bom_ref)
+                    else:
+                        custom_print(f"Match found: {guessed_bom_ref}")
+                        bom_ref = guessed_bom_ref
 
             if "dependsOn" in dependency:
                 for depends_on in dependency["dependsOn"]:
                     if depends_on not in components:
-                        custom_print(f"WARNING: 'dependsOn' '{depends_on}' is used in 'dependencies' but it's not declared in 'components'. I'll search for a match...")
-                        guessed_bom_ref = normalize_bom_ref(all_bom_refs, depends_on)
-                        if guessed_bom_ref is None:
-                            custom_print(f"Match not found. I'll create a fake one.")
-                            components[depends_on] = create_fake_component(depends_on)
+                        if depends_on in guessed_bom_refs_cache:
+                            depends_on = guessed_bom_refs_cache[depends_on]
                         else:
-                            custom_print(f"Match found: {guessed_bom_ref}")
-                            depends_on = guessed_bom_ref
+                            custom_print(f"WARNING: 'dependsOn' '{depends_on}' is used in 'dependencies' in a 'dependsOn' field but it's not declared in 'components'. I'll search for a match...")
+                            guessed_bom_ref = normalize_bom_ref(all_bom_refs, depends_on)
+                            guessed_bom_refs_cache[depends_on] = guessed_bom_ref
+                            if guessed_bom_ref is None:
+                                custom_print(f"Match not found. I'll create a fake one.")
+                                components[depends_on] = create_fake_component(depends_on)
+                            else:
+                                custom_print(f"Match found: {guessed_bom_ref}")
+                                depends_on = guessed_bom_ref
 
                     components[bom_ref]["depends_on"].add(depends_on)
                     components[depends_on]["dependency_of"].add(bom_ref)
 
     if "vulnerabilities" in data:
         for vulnerability in data["vulnerabilities"]:
-            vuln_id, vuln_severity = parse_vulnerability_data(vulnerability)
+            vuln_id, vuln_severity, vuln_score = parse_vulnerability_data(vulnerability)
 
             for affects in vulnerability["affects"]:
                 bom_ref = affects["ref"]
@@ -841,13 +1010,13 @@ def parse_json_data(data):
                     custom_print(f"WARNING: 'ref' '{bom_ref}' is used in 'vulnerabilities' but it's not declared in 'components'. I'll create a fake one.")
                     components[bom_ref] = create_fake_component(bom_ref)
 
-                vulnerability_data = {"id": vuln_id, "severity": vuln_severity}
+                vulnerability_data = {"id": vuln_id, "severity": vuln_severity, "score": vuln_score}
                 if vulnerability_data not in components[bom_ref]["vulnerabilities"]:
                     components[bom_ref]["vulnerabilities"].append(vulnerability_data)
                 if VALID_SEVERITIES[vuln_severity] > VALID_SEVERITIES[components[bom_ref]["max_vulnerability_severity"]]:
                     components[bom_ref]["max_vulnerability_severity"] = vuln_severity
 
-    return components
+    return components, metadata_info
 
 
 def parse_string(input_string):
@@ -1066,7 +1235,7 @@ def license_badge_for_table(component):
     return licenses
 
 
-def build_table_content(components):
+def build_components_table_content(components):
     rows = ["""<thead>
         <tr>
             <th>Component</th>
@@ -1077,12 +1246,12 @@ def build_table_content(components):
             <th>License</th>
         </tr>
         <tr>
-            <th><input type="text" placeholder="Search Component" class="form-control search-in-table"></th>
-            <th><input type="text" placeholder="Search Depends on" class="form-control search-in-table"></th>
-            <th><input type="text" placeholder="Search Dependency of" class="form-control search-in-table"></th>
-            <th><input type="text" placeholder="Search Direct vulnerabilities" class="form-control search-in-table"></th>
-            <th><input type="text" placeholder="Search Transitive vulnerabilities" class="form-control search-in-table"></th>
-            <th><input type="text" placeholder="Search License" class="form-control search-in-table"></th>
+            <th><input type="text" placeholder="Search Component" class="form-control search-in-table-comp"></th>
+            <th><input type="text" placeholder="Search Depends on" class="form-control search-in-table-comp"></th>
+            <th><input type="text" placeholder="Search Dependency of" class="form-control search-in-table-comp"></th>
+            <th><input type="text" placeholder="Search Direct vulnerabilities" class="form-control search-in-table-comp"></th>
+            <th><input type="text" placeholder="Search Transitive vulnerabilities" class="form-control search-in-table-comp"></th>
+            <th><input type="text" placeholder="Search License" class="form-control search-in-table-comp"></th>
         </tr>
     </thead>"""]
     rows.append("<tbody>")
@@ -1144,6 +1313,67 @@ def build_table_content(components):
     return "".join(rows)
 
 
+def build_metadata_table_content(metadata_info, counter_critical, counter_high, counter_medium, counter_low, counter_info, components):
+    rows = []
+
+    # headers
+    rows.append("<thead>")
+    rows.append("<tr>")
+    rows.append(f"<th>No. of Components</th>")
+    rows.append(f"<th>Vulnerabilities</th>")
+    for header, _ in metadata_info.items():
+        rows.append(f"<th>{html.escape(header)}</th>")
+    rows.append("</tr>")
+    rows.append("</thead>")
+
+    # body
+    rows.append("<tbody>")
+    rows.append("<tr>")
+
+    rows.append(f"<td>{len(components)}</td>")
+
+    vulnerabilities_td = ""
+    if counter_critical > 0:
+        vulnerabilities_td += f'<span class="badge bg-dark-red">{counter_critical}</span>&nbsp;'
+    else:
+        vulnerabilities_td += f'<span class="badge bg-dark-red opaque">{counter_critical}</span>&nbsp;'
+    if counter_high > 0:
+        vulnerabilities_td += f'<span class="badge bg-danger">{counter_high}</span>&nbsp;'
+    else:
+        vulnerabilities_td += f'<span class="badge bg-danger opaque">{counter_high}</span>&nbsp;'
+    if counter_medium > 0:
+        vulnerabilities_td += f'<span class="badge bg-orange">{counter_medium}</span>&nbsp;'
+    else:
+        vulnerabilities_td += f'<span class="badge bg-orange opaque">{counter_medium}</span>&nbsp;'
+    if counter_low > 0:
+        vulnerabilities_td += f'<span class="badge bg-yellow">{counter_low}</span>&nbsp;'
+    else:
+        vulnerabilities_td += f'<span class="badge bg-yellow opaque">{counter_low}</span>&nbsp;'
+    if counter_info > 0:
+        vulnerabilities_td += f'<span class="badge bg-success">{counter_info}</span>&nbsp;'
+    else:
+        vulnerabilities_td += f'<span class="badge bg-success opaque">{counter_info}</span>&nbsp;'
+
+    rows.append(f"<td>{vulnerabilities_td}</td>")
+
+    for _, metadata_content in metadata_info.items():
+        if isinstance(metadata_content, dict):
+            rows.append("<td>")
+            content_values = []
+            for content_key, content_value in metadata_content.items():
+                content_values.append(f'<i>{html.escape(content_key)}</i>&nbsp;&#x2192;&nbsp;{html.escape(content_value)}')
+            rows.append('<span style="display: none;">, </span><br>'.join(content_values) + "</td>"
+                    )
+            rows.append("</td>")
+        else:
+            rows.append("<td>" + html.escape(f"{metadata_content}") + "</td>")
+
+    rows.append("</tr>")
+    rows.append("</tbody>")
+
+    return "".join(rows)
+
+
 def write_output_file(html_content, output_file_path):
     with open(output_file_path, "w") as text_file:
         text_file.write(html_content)
@@ -1180,13 +1410,78 @@ def get_only_vulnerable_components(components):
 
     return vulnerable_components
 
+
+def parse_vulnerabilities(components):
+    vulnerabilities = {}
+
+    counter_critical = 0
+    counter_high = 0
+    counter_medium = 0
+    counter_low = 0
+    counter_info = 0
+
+    # populate vulnerable components
+    for component_bom_ref, component in components.items():
+        if len(component["vulnerabilities"]) == 0 and len(component["transitive_vulnerabilities"]) == 0:
+            continue  # component is not vulnerable in any way
+
+        for vulnerability in component["vulnerabilities"]:
+            vuln_key = f"{vulnerability['id']}-{vulnerability['severity']}-{vulnerability['score']}"
+
+            if vuln_key not in vulnerabilities:
+                vulnerabilities[vuln_key] = {"id": vulnerability['id'],
+                                             "severity": vulnerability['severity'],
+                                             "score": vulnerability['score'],
+                                             "directly_vulnerable_components": set(),
+                                             "transitively_vulnerable_components": set()}
+
+                if vulnerability['severity'] == "critical":
+                    counter_critical += 1
+                elif vulnerability['severity'] == "high":
+                    counter_high += 1
+                elif vulnerability['severity'] == "medium":
+                    counter_medium += 1
+                elif vulnerability['severity'] == "low":
+                    counter_low += 1
+                else:
+                    counter_info += 1
+
+            vulnerabilities[vuln_key]["directly_vulnerable_components"].add(component_bom_ref)
+
+    for vulnerability in component["transitive_vulnerabilities"]:
+            vuln_key = f"{vulnerability['id']}-{vulnerability['severity']}-{vulnerability['score']}"
+
+            if vuln_key not in vulnerabilities:
+                vulnerabilities[vuln_key] = {"id": vulnerability['id'],
+                                             "severity": vulnerability['severity'],
+                                             "score": vulnerability['score'],
+                                             "directly_vulnerable_components": set(),
+                                             "transitively_vulnerable_components": set()}
+
+                if vulnerability['severity'] == "critical":
+                    counter_critical += 1
+                elif vulnerability['severity'] == "high":
+                    counter_high += 1
+                elif vulnerability['severity'] == "medium":
+                    counter_medium += 1
+                elif vulnerability['severity'] == "low":
+                    counter_low += 1
+                else:
+                    counter_info += 1
+
+            vulnerabilities[vuln_key]["directly_vulnerable_components"].add(component_bom_ref)
+
+
+    return vulnerabilities, counter_critical, counter_high, counter_medium, counter_low, counter_info
+
+
 def main_cli(input_file_path, output_file_path):
     if not os.path.exists(input_file_path):
         custom_print(f"File does not exist: '{input_file_path}'")
         exit()
 
     try:
-        components = parse_file(input_file_path)
+        components, metadata_info = parse_file(input_file_path)
     except Exception as e:
         custom_print(f"Error parsing input file: {e}")
         exit()
@@ -1195,17 +1490,21 @@ def main_cli(input_file_path, output_file_path):
     echart_data_all_components = build_echarts_data(components)
     double_check_if_all_components_were_taken_into_account(components, echart_data_all_components)
 
+    vulnerabilities, counter_critical, counter_high, counter_medium, counter_low, counter_info = parse_vulnerabilities(components)
+
     # chart with only vulnerable components
     vulnerable_components = get_only_vulnerable_components(components)
     echart_data_vulnerable_components = build_echarts_data(vulnerable_components)
     double_check_if_all_components_were_taken_into_account(vulnerable_components, echart_data_vulnerable_components)
 
-    table_content = build_table_content(components)
+    components_table_content = build_components_table_content(components)
+    metadata_table_content = build_metadata_table_content(metadata_info, counter_critical, counter_high, counter_medium, counter_low, counter_info, components)
     
     html_content = HTML_TEMPLATE.replace("<CHART_DATA_HERE>", json.dumps(echart_data_all_components, indent=2))
     html_content = html_content.replace("<CHART_DATA_VULN_HERE>", json.dumps(echart_data_vulnerable_components, indent=2))
     html_content = html_content.replace("<FILE_NAME_HERE>", html.escape(os.path.basename(input_file_path)))
-    html_content = html_content.replace("<TABLE_HERE>", table_content)
+    html_content = html_content.replace("<COMPONENTS_TABLE_HERE>", components_table_content)
+    html_content = html_content.replace("<METADATA_TABLE_HERE>", metadata_table_content)
     
     write_output_file(html_content, output_file_path)
     custom_print("Done.")
@@ -1213,7 +1512,7 @@ def main_cli(input_file_path, output_file_path):
 
 def main_web(input_string):
     try:
-        components = parse_string(input_string)
+        components, metadata_info = parse_string(input_string)
     except Exception as e:
         custom_print(f"Error parsing input string: {e}")
         exit()
@@ -1223,15 +1522,18 @@ def main_web(input_string):
     double_check_if_all_components_were_taken_into_account(components, echart_data_all_components)
     echart_data_all_components = json.dumps(echart_data_all_components, indent=2)
 
+    vulnerabilities, counter_critical, counter_high, counter_medium, counter_low, counter_info = parse_vulnerabilities(components)
+
     # chart with only vulnerable components
     vulnerable_components = get_only_vulnerable_components(components)
     echart_data_vulnerable_components = build_echarts_data(vulnerable_components)
     double_check_if_all_components_were_taken_into_account(vulnerable_components, echart_data_vulnerable_components)
     echart_data_vulnerable_components = json.dumps(echart_data_vulnerable_components, indent=2)
 
-    table_content = build_table_content(components)
+    components_table_content = build_components_table_content(components)
+    metadata_table_content = build_metadata_table_content(metadata_info, counter_critical, counter_high, counter_medium, counter_low, counter_info, components)
     
-    return echart_data_all_components, echart_data_vulnerable_components, table_content
+    return echart_data_all_components, echart_data_vulnerable_components, components_table_content, metadata_table_content
 
 
 if __name__ == "__main__":
@@ -1261,8 +1563,9 @@ if __name__ == "__main__":
 
 
 if __name__ == "__web__":
-    echart_data_all_components, echart_data_vulnerable_components, table_content = main_web(INPUT_DATA)
+    echart_data_all_components, echart_data_vulnerable_components, components_table_content, metadata_table_content = main_web(INPUT_DATA)
     OUTPUT_CHART_DATA = echart_data_all_components
     OUTPUT_CHART_DATA_VULNERABLE_COMPONENTS = echart_data_vulnerable_components
-    OUTPUT_TABLE_DATA = table_content
+    OUTPUT_COMPONENTS_TABLE_DATA = components_table_content
+    OUTPUT_METADATA_TABLE_DATA = metadata_table_content
 
