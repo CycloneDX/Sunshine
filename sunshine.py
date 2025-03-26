@@ -506,7 +506,7 @@ HTML_TEMPLATE = """
           });
       </script>
       <br><br>
-      <div id="footer">Sunshine - SBOM visualization tool by <a href="https://www.linkedin.com/in/lucacapacci/">Luca Capacci</a> | <a href="https://github.com/lucacapacci/Sunshine/">GitHub repository</a> | <a href="https://github.com/lucacapacci/Sunshine/blob/main/LICENSE">License</a> | <a href="https://github.com/lucacapacci/Sunshine/blob/main/THIRD_PARTY_LICENSES">Third party licenses</a></div>
+      <div id="footer">Sunshine - SBOM visualization tool by <a href="https://www.linkedin.com/in/lucacapacci/">Luca Capacci</a> | <a href="https://github.com/CycloneDX/Sunshine/">GitHub repository</a> | <a href="https://github.com/CycloneDX/Sunshine/blob/main/LICENSE">License</a></div>
     </body>
 </html>
 """
