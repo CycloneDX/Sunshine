@@ -129,13 +129,13 @@ HTML_TEMPLATE = """
             border-radius: 4px;
         }
 
-        #table-container, #info-table-container {
+        #table-container, #info-table-container, #vulnerabilities-table-container {
             background-color: #fffffF;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
         }
-        #table-container-placeholder, #info-table-container-placeholder {
+        #table-container-placeholder, #info-table-container-placeholder, #vulnerabilities-table-container-placeholder {
             background-color: #fffffF;
             padding: 10px;
             border: 1px solid #ddd;
@@ -180,7 +180,7 @@ HTML_TEMPLATE = """
             color: #1C538E;
         }
 
-        #components-table_paginate {
+        #components-table_paginate, #vulnerabilities-table_paginate {
             float: right;
             margin-top: -33px;
         }
@@ -226,6 +226,13 @@ HTML_TEMPLATE = """
 
         .opaque {
             opacity: 0.5;
+        }
+
+        @media print {
+            body {
+                background-color: transparent !important;
+                background-image: none !important;
+            }
         }
     
     </style>
@@ -314,6 +321,31 @@ HTML_TEMPLATE = """
             <div id="table-container-inner">
                 <table id="components-table" class="table table-striped table-bordered" style="width:100%"><COMPONENTS_TABLE_HERE></table>
             </div>
+    </div>
+    <br>
+    <h3 class="light-text">Vulnerabilities table</h3>
+    <div id="vulnerabilities-table-container">
+        This table focuses on vulnerabilities and shows the components that are affected either directly or transitively.<br>
+        The colors of the elements in column "Vulnerability" indicate the severity of the vulnerabilities:
+        <ul>
+            <li><b>Dark red:</b> critical.</li>
+            <li><b>Red:</b> high.</li>
+            <li><b>Orange:</b> medium.</li>  
+            <li><b>Yellow:</b>low.</li>  
+            <li><b>Green:</b>informational.</li> 
+        </ul>
+        <br>
+        The colors of the elements in columns "Directly vulnerable components" and "Transitively vulnerable components" indicate the vulnerability status of the components:
+        <ul>
+            <li><b>Dark red:</b> affected by at least one critical severity vulnerability.</li>
+            <li><b>Red:</b> affected by at least one high severity vulnerability.</li>
+            <li><b>Orange:</b> affected by at least one medium severity vulnerability.</li>  
+            <li><b>Yellow:</b> affected by at least one low severity vulnerability.</li>  
+            <li><b>Green:</b> affected by at least one informational severity vulnerability.</li>  
+            <li><b>Light blue:</b> not directly affected by vulnerabilities but has at least one vulnerable dependency.</li> 
+        </ul>
+        <hr><br>
+                <table id="vulnerabilities-table" class="table table-striped table-bordered" style="width:100%"><VULNERABILITIES_TABLE_HERE></table>
     </div>
     <script type="text/javascript">
         function showDiv(divId) {
@@ -434,8 +466,7 @@ HTML_TEMPLATE = """
               { extend: 'copy', className: 'btn btn-dark mb-3 btn-sm' },
               { extend: 'csv', className: 'btn btn-secondary mb-3 btn-sm' },
               { extend: 'excel', className: 'btn btn-success mb-3 btn-sm' },
-              { extend: 'pdf', className: 'btn btn-danger mb-3 btn-sm' },
-              { extend: 'print', className: 'btn btn-info mb-3 btn-sm', 
+              { extend: 'print', className: 'btn btn-danger mb-3 btn-sm', 
                 customize: function (win) {
                     $(win.document.body).css('font-size', '10pt');
                     $(win.document.body).find('table').addClass('compact').css('font-size', 'inherit');
@@ -478,8 +509,7 @@ HTML_TEMPLATE = """
               { extend: 'copy', className: 'btn btn-dark mb-3 btn-sm' },
               { extend: 'csv', className: 'btn btn-secondary mb-3 btn-sm' },
               { extend: 'excel', className: 'btn btn-success mb-3 btn-sm' },
-              { extend: 'pdf', className: 'btn btn-danger mb-3 btn-sm' },
-              { extend: 'print', className: 'btn btn-info mb-3 btn-sm', 
+              { extend: 'print', className: 'btn btn-danger mb-3 btn-sm', 
                 customize: function (win) {
                     $(win.document.body).css('font-size', '10pt');
                     $(win.document.body).find('table').addClass('compact').css('font-size', 'inherit');
@@ -504,6 +534,49 @@ HTML_TEMPLATE = """
             orderCellsTop: true,
             "autoWidth": true
           });
+
+          let vulnerabilitiesTable = $('#vulnerabilities-table').DataTable({
+            "order": [[ 1, "asc" ]],
+            pageLength: 10,
+            dom: 'Blfrtip',
+            lengthMenu: [
+                [10, 25, 50, -1],
+                [10, 25, 50, 'All']
+            ],
+            buttons: [
+              { extend: 'copy', className: 'btn btn-dark mb-3 btn-sm' },
+              { extend: 'csv', className: 'btn btn-secondary mb-3 btn-sm' },
+              { extend: 'excel', className: 'btn btn-success mb-3 btn-sm' },
+              { extend: 'print', className: 'btn btn-danger mb-3 btn-sm', 
+                customize: function (win) {
+                    $(win.document.body).css('font-size', '10pt');
+                    $(win.document.body).find('table').addClass('compact').css('font-size', 'inherit');
+
+                    // Add landscape mode
+                    var css = '@page { size: landscape; }',
+                        head = win.document.head || win.document.getElementsByTagName('head')[0],
+                        style = win.document.createElement('style');
+
+                    style.type = 'text/css';
+                    style.media = 'print';
+
+                    if (style.styleSheet) {
+                        style.styleSheet.cssText = css;
+                    } else {
+                        style.appendChild(win.document.createTextNode(css));
+                    }
+                    head.appendChild(style);
+                }
+              }
+            ],
+            orderCellsTop: true,
+            "autoWidth": true
+          });
+
+        $('#vulnerabilities-table thead input').on('keyup change', function () {
+            let columnIndex = $(this).parent().index();
+            vulnerabilitiesTable.column(columnIndex).search(this.value).draw();
+        });
       </script>
       <br><br>
       <div id="footer">Sunshine - SBOM visualization tool by <a href="https://www.linkedin.com/in/lucacapacci/">Luca Capacci</a> | <a href="https://github.com/CycloneDX/Sunshine/">GitHub repository</a> | <a href="https://github.com/CycloneDX/Sunshine/blob/main/LICENSE">License</a></div>
@@ -575,6 +648,7 @@ def parse_vulnerability_data(vulnerability):
 
     vuln_severity = None
     vuln_score = 0.0
+    vuln_vector = "-"
     if "ratings" in vulnerability:
         for rating in vulnerability["ratings"]:
             if "method" not in rating:
@@ -589,10 +663,14 @@ def parse_vulnerability_data(vulnerability):
                             vuln_severity = rating_vuln_severity.lower()
                             if "score" in rating:
                                 vuln_score = float(rating["score"])
+                            if "vector" in rating:
+                                vuln_vector = rating["vector"]
                             break
                     if "score" in rating:
                         vuln_severity = get_severity_by_score(rating["score"])
                         vuln_score = float(rating["score"])
+                        if "vector" in rating:
+                            vuln_vector = rating["vector"]
                         break
 
 
@@ -610,18 +688,22 @@ def parse_vulnerability_data(vulnerability):
                     if rating_vuln_severity.lower() in VALID_SEVERITIES:
                         vuln_severity = rating_vuln_severity.lower()
                         if "score" in rating:
-                                vuln_score = float(rating["score"])
+                            vuln_score = float(rating["score"])
+                        if "vector" in rating:
+                            vuln_vector = rating["vector"]
                         break
                 if "score" in rating:
                     vuln_severity = get_severity_by_score(rating["score"])
                     vuln_score = float(rating["score"])
+                    if "vector" in rating:
+                        vuln_vector = rating["vector"]
                     break
 
     if vuln_severity is None:
         custom_print(f"WARNING: could not detect severity of vulnerability with id '{vulnerability['id']}'. I'll set a default 'INFORMATION' severity...")
         vuln_severity = get_severity_by_score(0)
 
-    return vuln_id, vuln_severity, vuln_score
+    return vuln_id, vuln_severity, vuln_score, vuln_vector
 
 
 bom_ref_cache = {}
@@ -956,9 +1038,9 @@ def parse_json_data(data):
 
             if "vulnerabilities" in component:
                 for vulnerability in component["vulnerabilities"]:
-                    vuln_id, vuln_severity, vuln_score = parse_vulnerability_data(vulnerability)
+                    vuln_id, vuln_severity, vuln_score, vuln_vector = parse_vulnerability_data(vulnerability)
 
-                    vulnerability_data = {"id": vuln_id, "severity": vuln_severity, "score": vuln_score}
+                    vulnerability_data = {"id": vuln_id, "severity": vuln_severity, "score": vuln_score, "vector": vuln_vector}
                     if vulnerability_data not in components[bom_ref]["vulnerabilities"]:
                         components[bom_ref]["vulnerabilities"].append(vulnerability_data)
                     if VALID_SEVERITIES[vuln_severity] > VALID_SEVERITIES[components[bom_ref]["max_vulnerability_severity"]]:
@@ -1002,7 +1084,7 @@ def parse_json_data(data):
 
     if "vulnerabilities" in data:
         for vulnerability in data["vulnerabilities"]:
-            vuln_id, vuln_severity, vuln_score = parse_vulnerability_data(vulnerability)
+            vuln_id, vuln_severity, vuln_score, vuln_vector = parse_vulnerability_data(vulnerability)
 
             for affects in vulnerability["affects"]:
                 bom_ref = affects["ref"]
@@ -1010,7 +1092,7 @@ def parse_json_data(data):
                     custom_print(f"WARNING: 'ref' '{bom_ref}' is used in 'vulnerabilities' but it's not declared in 'components'. I'll create a fake one.")
                     components[bom_ref] = create_fake_component(bom_ref)
 
-                vulnerability_data = {"id": vuln_id, "severity": vuln_severity, "score": vuln_score}
+                vulnerability_data = {"id": vuln_id, "severity": vuln_severity, "score": vuln_score, "vector": vuln_vector}
                 if vulnerability_data not in components[bom_ref]["vulnerabilities"]:
                     components[bom_ref]["vulnerabilities"].append(vulnerability_data)
                 if VALID_SEVERITIES[vuln_severity] > VALID_SEVERITIES[components[bom_ref]["max_vulnerability_severity"]]:
@@ -1208,19 +1290,23 @@ def component_badge_for_table(component):
     return component_on_display + "</span>"
 
 
+def get_vulnerability_badge_by_severity(severity):
+    if severity == "critical":
+        return 'bg-dark-red'
+    elif severity == "high":
+        return 'bg-danger'
+    elif severity == "medium":
+        return 'bg-orange'
+    elif severity == "low":
+        return 'bg-yellow'
+    elif severity in ["information", "info"]:
+        return 'bg-success'
+    return ''
+
 def vulnerability_badge_for_table(component, key="vulnerabilities"):
     vulns = {}
     for vulnerability in component[key]:
-        if vulnerability["severity"] == "critical":
-            badge_class = 'bg-dark-red'
-        elif vulnerability["severity"] == "high":
-            badge_class = 'bg-danger'
-        elif vulnerability["severity"] == "medium":
-            badge_class = 'bg-orange'
-        elif vulnerability["severity"] == "low":
-            badge_class = 'bg-yellow'
-        elif vulnerability["severity"] in ["information", "info"]:
-            badge_class = 'bg-success'
+        badge_class = get_vulnerability_badge_by_severity(vulnerability["severity"])
 
         vulns[f'<span class="badge {badge_class}">{html.escape(vulnerability["severity"].title())} &#x2192; {html.escape(vulnerability["id"])}</span>'] = VALID_SEVERITIES[vulnerability["severity"]]
     vulns = vulns = dict(sorted(vulns.items(), key=lambda item: (-item[1], item[0])))
@@ -1307,6 +1393,63 @@ def build_components_table_content(components):
         new_row += "</tr>\n"
 
         rows.append(new_row)
+
+    rows.append("</tbody>")
+
+    return "".join(rows)
+
+
+def build_vulnerabilities_table_content(vulnerabilities, components):
+    rows = ["""<thead>
+        <tr>
+            <th>Vulnerability</th>
+            <th>Severity</th>
+            <th>Score</th>
+            <th>Vector</th>
+            <th>Directly vulnerable <br>components</th>
+            <th>Transitively vulnerable <br>components</th>
+        </tr>
+        <tr>
+            <th><input type="text" placeholder="Search Vulnerability" class="form-control search-in-table-vuln"></th>
+            <th><input type="text" placeholder="Search Severity" class="form-control search-in-table-vuln"></th>
+            <th><input type="text" placeholder="Search Score" class="form-control search-in-table-vuln"></th>
+            <th><input type="text" placeholder="Search Vector" class="form-control search-in-table-vuln"></th>
+            <th><input type="text" placeholder="Search Directly vulnerable components" class="form-control search-in-table-vuln"></th>
+            <th><input type="text" placeholder="Search Transitively vulnerable components" class="form-control search-in-table-vuln"></th>
+        </tr>
+    </thead>"""]
+    rows.append("<tbody>")
+
+    for _, vulnerability in vulnerabilities.items():
+        rows.append("<tr>")
+        badge_class = get_vulnerability_badge_by_severity(vulnerability["severity"])
+        rows.append("<td>" + f'<span class="badge {badge_class}">{html.escape(vulnerability["id"])}</span>' + "</td>")
+        
+        rows.append("<td>" + f'{html.escape(vulnerability["severity"].title())}' + "</td>")
+        rows.append("<td>" + f'{vulnerability["score"]}' + "</td>")
+        rows.append("<td>" + f'{html.escape(vulnerability["vector"])}' + "</td>")
+
+        if len(vulnerability["directly_vulnerable_components"]) == 0:
+            rows.append("<td>-</td>")
+        else:
+            vulnerable_components_td = "<td>"
+            content_values = []
+            for component in vulnerability["directly_vulnerable_components"]:
+                content_values.append(component_badge_for_table(components[component]))
+            vulnerable_components_td += '<span style="display: none;">, </span><br>'.join(content_values) + "</td>"
+            rows.append(vulnerable_components_td)
+
+        if len(vulnerability["transitively_vulnerable_components"]) == 0:
+            rows.append("<td>-</td>")
+        else:
+            vulnerable_components_td = "<td>"
+            content_values = []
+            for component in vulnerability["transitively_vulnerable_components"]:
+                content_values.append(component_badge_for_table(components[component]))
+            vulnerable_components_td += '<span style="display: none;">, </span><br>'.join(content_values) + "</td>"
+            rows.append(vulnerable_components_td)
+
+        rows.append("</tr>")
 
     rows.append("</tbody>")
 
@@ -1432,6 +1575,7 @@ def parse_vulnerabilities(components):
                 vulnerabilities[vuln_key] = {"id": vulnerability['id'],
                                              "severity": vulnerability['severity'],
                                              "score": vulnerability['score'],
+                                             "vector": vulnerability['vector'],
                                              "directly_vulnerable_components": set(),
                                              "transitively_vulnerable_components": set()}
 
@@ -1448,13 +1592,14 @@ def parse_vulnerabilities(components):
 
             vulnerabilities[vuln_key]["directly_vulnerable_components"].add(component_bom_ref)
 
-    for vulnerability in component["transitive_vulnerabilities"]:
+        for vulnerability in component["transitive_vulnerabilities"]:
             vuln_key = f"{vulnerability['id']}-{vulnerability['severity']}-{vulnerability['score']}"
 
             if vuln_key not in vulnerabilities:
                 vulnerabilities[vuln_key] = {"id": vulnerability['id'],
                                              "severity": vulnerability['severity'],
                                              "score": vulnerability['score'],
+                                             "vector": vulnerability['vector'],
                                              "directly_vulnerable_components": set(),
                                              "transitively_vulnerable_components": set()}
 
@@ -1469,7 +1614,7 @@ def parse_vulnerabilities(components):
                 else:
                     counter_info += 1
 
-            vulnerabilities[vuln_key]["directly_vulnerable_components"].add(component_bom_ref)
+            vulnerabilities[vuln_key]["transitively_vulnerable_components"].add(component_bom_ref)
 
 
     return vulnerabilities, counter_critical, counter_high, counter_medium, counter_low, counter_info
@@ -1499,11 +1644,13 @@ def main_cli(input_file_path, output_file_path):
 
     components_table_content = build_components_table_content(components)
     metadata_table_content = build_metadata_table_content(metadata_info, counter_critical, counter_high, counter_medium, counter_low, counter_info, components)
+    vulnerabilities_table_content = build_vulnerabilities_table_content(vulnerabilities, components)
     
     html_content = HTML_TEMPLATE.replace("<CHART_DATA_HERE>", json.dumps(echart_data_all_components, indent=2))
     html_content = html_content.replace("<CHART_DATA_VULN_HERE>", json.dumps(echart_data_vulnerable_components, indent=2))
     html_content = html_content.replace("<FILE_NAME_HERE>", html.escape(os.path.basename(input_file_path)))
     html_content = html_content.replace("<COMPONENTS_TABLE_HERE>", components_table_content)
+    html_content = html_content.replace("<VULNERABILITIES_TABLE_HERE>", vulnerabilities_table_content)
     html_content = html_content.replace("<METADATA_TABLE_HERE>", metadata_table_content)
     
     write_output_file(html_content, output_file_path)
@@ -1532,8 +1679,10 @@ def main_web(input_string):
 
     components_table_content = build_components_table_content(components)
     metadata_table_content = build_metadata_table_content(metadata_info, counter_critical, counter_high, counter_medium, counter_low, counter_info, components)
+
+    vulnerabilities_table_content = build_vulnerabilities_table_content(vulnerabilities, components)
     
-    return echart_data_all_components, echart_data_vulnerable_components, components_table_content, metadata_table_content
+    return echart_data_all_components, echart_data_vulnerable_components, components_table_content, metadata_table_content, vulnerabilities_table_content
 
 
 if __name__ == "__main__":
@@ -1563,9 +1712,10 @@ if __name__ == "__main__":
 
 
 if __name__ == "__web__":
-    echart_data_all_components, echart_data_vulnerable_components, components_table_content, metadata_table_content = main_web(INPUT_DATA)
+    echart_data_all_components, echart_data_vulnerable_components, components_table_content, metadata_table_content, vulnerabilities_table_content = main_web(INPUT_DATA)
     OUTPUT_CHART_DATA = echart_data_all_components
     OUTPUT_CHART_DATA_VULNERABLE_COMPONENTS = echart_data_vulnerable_components
     OUTPUT_COMPONENTS_TABLE_DATA = components_table_content
     OUTPUT_METADATA_TABLE_DATA = metadata_table_content
+    OUTPUT_VULNERABILITIES_TABLE_DATA = vulnerabilities_table_content
 

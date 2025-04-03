@@ -57,13 +57,13 @@
             border-radius: 4px;
         }
 
-        #table-container, #info-table-container {
+        #table-container, #info-table-container, #vulnerabilities-table-container {
             background-color: #fffffF;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
         }
-        #table-container-placeholder, #info-table-container-placeholder {
+        #table-container-placeholder, #info-table-container-placeholder, #vulnerabilities-table-container-placeholder {
             background-color: #fffffF;
             padding: 10px;
             border: 1px solid #ddd;
@@ -108,7 +108,7 @@
             color: #1C538E;
         }
 
-        #components-table_paginate {
+        #components-table_paginate, #vulnerabilities-table_paginate {
             float: right;
             margin-top: -33px;
         }
@@ -154,6 +154,13 @@
 
         .opaque {
             opacity: 0.5;
+        }
+
+        @media print {
+            body {
+                background-color: transparent !important;
+                background-image: none !important;
+            }
         }
     
     </style>
@@ -264,7 +271,7 @@
 <tr><td><span class="badge bg-secondary">system.text.encodings.web 7.0.0</span></td><td>-</td><td><span class="badge bg-danger">system.text.json 7.0.3</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">system.text.encoding 4.3.0</span></td><td>-</td><td><span class="badge bg-secondary">system.io 4.3.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">Microsoft .NET Library EULA</span><span style="display: none;">, </span><br><span class="badge border border-dark text-dark">Microsoft .NET Library License</span><span style="display: none;">, </span><br><span class="badge border border-dark text-dark">Microsoft .NET Library RTW</span></td></tr>
 <tr><td><span class="badge bg-secondary">system.security.principal 4.3.0</span></td><td>-</td><td><span class="badge bg-secondary">system.security.claims 4.3.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">Microsoft .NET Library EULA</span><span style="display: none;">, </span><br><span class="badge border border-dark text-dark">Microsoft .NET Library License</span></td></tr>
-<tr><td><span class="badge bg-secondary">system.security.claims 4.3.0</span></td><td><span class="badge bg-secondary">system.runtime.extensions 4.3.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">system.security.principal 4.3.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">system.globalization 4.3.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">system.collections 4.3.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">system.resources.resourcemanager 4.3.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">system.io 4.3.0</span></td><td><span class="badge bg-secondary">microsoft.graph.core 3.1.8</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">Microsoft .NET Library EULA</span><span style="display: none;">, </span><br><span class="badge border border-dark text-dark">Microsoft .NET Library License</span></td></tr>
+<tr><td><span class="badge bg-secondary">system.security.claims 4.3.0</span></td><td><span class="badge bg-secondary">system.resources.resourcemanager 4.3.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">system.security.principal 4.3.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">system.runtime.extensions 4.3.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">system.globalization 4.3.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">system.io 4.3.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">system.collections 4.3.0</span></td><td><span class="badge bg-secondary">microsoft.graph.core 3.1.8</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">Microsoft .NET Library EULA</span><span style="display: none;">, </span><br><span class="badge border border-dark text-dark">Microsoft .NET Library License</span></td></tr>
 <tr><td><span class="badge bg-secondary">system.runtime.extensions 4.3.0</span></td><td>-</td><td><span class="badge bg-secondary">system.security.claims 4.3.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">Microsoft .NET Library EULA</span><span style="display: none;">, </span><br><span class="badge border border-dark text-dark">Microsoft .NET Library License</span><span style="display: none;">, </span><br><span class="badge border border-dark text-dark">Microsoft .NET Library RTW</span></td></tr>
 <tr><td><span class="badge bg-secondary">system.runtime 4.3.0</span></td><td>-</td><td><span class="badge bg-secondary">system.collections 4.3.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">Microsoft .NET Library EULA</span><span style="display: none;">, </span><br><span class="badge border border-dark text-dark">Microsoft .NET Library License</span><span style="display: none;">, </span><br><span class="badge border border-dark text-dark">Microsoft .NET Library RTW</span></td></tr>
 <tr><td><span class="badge bg-secondary">system.resources.resourcemanager 4.3.0</span></td><td><span class="badge bg-secondary">system.reflection 4.3.0</span></td><td><span class="badge bg-secondary">system.security.claims 4.3.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">Microsoft .NET Library EULA</span><span style="display: none;">, </span><br><span class="badge border border-dark text-dark">Microsoft .NET Library License</span><span style="display: none;">, </span><br><span class="badge border border-dark text-dark">Microsoft .NET Library RTW</span></td></tr>
@@ -287,7 +294,7 @@
 <tr><td><span class="badge bg-secondary">polly.contrib.waitandretry 1.1.1</span></td><td>-</td><td>-</td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">BSD-3-Clause</span></td></tr>
 <tr><td><span class="badge bg-secondary">polly 7.2.4</span></td><td>-</td><td><span class="badge bg-secondary">microsoft.extensions.http.polly 8.0.2</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">BSD-3-Clause</span></td></tr>
 <tr><td><span class="badge bg-secondary">oneof 2.1.155</span></td><td>-</td><td><span class="badge bg-secondary">antdesign 0.18.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">Bouncy Castle License</span><span style="display: none;">, </span><br><span class="badge border border-dark text-dark">MIT</span></td></tr>
-<tr><td><span class="badge bg-secondary">newtonsoft.json 13.0.1</span></td><td>-</td><td><span class="badge bg-light-blue">fluxor.blazor.web.reduxdevtools 5.9.1</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.bot.schema 4.21.1</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
+<tr><td><span class="badge bg-secondary">newtonsoft.json 13.0.1</span></td><td>-</td><td><span class="badge bg-secondary">microsoft.bot.schema 4.21.1</span><span style="display: none;">, </span><br><span class="badge bg-light-blue">fluxor.blazor.web.reduxdevtools 5.9.1</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">netstandard.library 2.0.3</span></td><td><span class="badge bg-secondary">microsoft.netcore.platforms 1.1.0</span></td><td><span class="badge bg-secondary">microsoft.graph.core 3.1.8</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.teamsfx 2.4.0</span></td><td><span class="badge bg-secondary">microsoft.extensions.options.dataannotations 6.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.bot.builder.dialogs 4.21.1</span></td><td>-</td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.rest.clientruntime 2.3.24</span></td><td>-</td><td><span class="badge bg-secondary">microsoft.bot.connector 4.21.1</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
@@ -295,7 +302,7 @@
 <tr><td><span class="badge bg-secondary">microsoft.recognizers.text.number 1.3.2</span></td><td>-</td><td><span class="badge bg-secondary">microsoft.recognizers.text.datetime 1.3.2</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.recognizers.text.datetime 1.3.2</span></td><td><span class="badge bg-secondary">microsoft.recognizers.text.number 1.3.2</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.recognizers.text.numberwithunit 1.3.2</span></td><td><span class="badge bg-secondary">microsoft.bot.builder.dialogs 4.21.1</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.recognizers.text.choice 1.3.2</span></td><td><span class="badge bg-secondary">microsoft.recognizers.text 1.3.2</span></td><td><span class="badge bg-secondary">microsoft.bot.builder.dialogs 4.21.1</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
-<tr><td><span class="badge bg-secondary">microsoft.recognizers.text 1.3.2</span></td><td><span class="badge bg-secondary">system.collections.immutable 1.4.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.extensions.caching.memory 2.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">system.valuetuple 4.4.0</span></td><td><span class="badge bg-secondary">microsoft.recognizers.text.choice 1.3.2</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
+<tr><td><span class="badge bg-secondary">microsoft.recognizers.text 1.3.2</span></td><td><span class="badge bg-secondary">microsoft.extensions.caching.memory 2.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">system.collections.immutable 1.4.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">system.valuetuple 4.4.0</span></td><td><span class="badge bg-secondary">microsoft.recognizers.text.choice 1.3.2</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.netcore.targets 1.1.0</span></td><td>-</td><td><span class="badge bg-secondary">system.collections 4.3.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">Microsoft .NET Library EULA</span><span style="display: none;">, </span><br><span class="badge border border-dark text-dark">Microsoft .NET Library License</span><span style="display: none;">, </span><br><span class="badge border border-dark text-dark">Microsoft .NET Library RTW</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.netcore.platforms 1.1.0</span></td><td>-</td><td><span class="badge bg-secondary">netstandard.library 2.0.3</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">Microsoft .NET Library EULA</span><span style="display: none;">, </span><br><span class="badge border border-dark text-dark">Microsoft .NET Library License</span><span style="display: none;">, </span><br><span class="badge border border-dark text-dark">Microsoft .NET Library RTW</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.net.http.headers 2.1.0</span></td><td><span class="badge bg-secondary">system.buffers 4.5.0</span></td><td><span class="badge bg-secondary">microsoft.bot.streaming 4.21.1</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">Apache-2.0</span></td></tr>
@@ -310,30 +317,30 @@
 <tr><td><span class="badge bg-secondary">microsoft.jsinterop 7.0.0</span></td><td>-</td><td><span class="badge bg-light-blue">microsoft.aspnetcore.components.web 7.0.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.identitymodel.tokens 7.3.1</span></td><td>-</td><td><span class="badge bg-secondary">microsoft.identitymodel.protocols 7.3.1</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.identitymodel.protocols.openidconnect 7.3.1</span></td><td><span class="badge bg-secondary">system.identitymodel.tokens.jwt 7.3.1</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.identitymodel.protocols 7.3.1</span></td><td><span class="badge bg-secondary">microsoft.graph.core 3.1.8</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
-<tr><td><span class="badge bg-secondary">microsoft.identitymodel.protocols 7.3.1</span></td><td><span class="badge bg-secondary">microsoft.identitymodel.tokens 7.3.1</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.identitymodel.logging 7.3.1</span></td><td><span class="badge bg-secondary">microsoft.identitymodel.protocols.openidconnect 7.3.1</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
+<tr><td><span class="badge bg-secondary">microsoft.identitymodel.protocols 7.3.1</span></td><td><span class="badge bg-secondary">microsoft.identitymodel.logging 7.3.1</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.identitymodel.tokens 7.3.1</span></td><td><span class="badge bg-secondary">microsoft.identitymodel.protocols.openidconnect 7.3.1</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.identitymodel.logging 7.3.1</span></td><td><span class="badge bg-secondary">microsoft.identitymodel.abstractions 7.3.1</span></td><td><span class="badge bg-secondary">microsoft.identitymodel.protocols 7.3.1</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.identitymodel.jsonwebtokens 7.3.1</span></td><td>-</td><td><span class="badge bg-secondary">system.identitymodel.tokens.jwt 7.3.1</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.identitymodel.abstractions 7.3.1</span></td><td>-</td><td><span class="badge bg-secondary">microsoft.identitymodel.logging 7.3.1</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.identitymodel.abstractions 6.22.0</span></td><td>-</td><td><span class="badge bg-orange">microsoft.identity.client 4.59.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-orange">microsoft.identity.client 4.59.0</span></td><td><span class="badge bg-secondary">microsoft.identitymodel.abstractions 6.22.0</span></td><td>-</td><td><span class="badge bg-orange">Medium &#x2192; CVE-2024-35255</span><span style="display: none;">, </span><br><span class="badge bg-yellow">Low &#x2192; CVE-2024-27086</span></td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.identity.abstractions 5.1.0</span></td><td>-</td><td>-</td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
-<tr><td><span class="badge bg-secondary">microsoft.graph.core 3.1.8</span></td><td><span class="badge bg-secondary">microsoft.kiota.http.httpclientlibrary 1.3.6</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.kiota.authentication.azure 1.1.3</span><span style="display: none;">, </span><br><span class="badge bg-secondary">netstandard.library 2.0.3</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.identitymodel.protocols.openidconnect 7.3.1</span><span style="display: none;">, </span><br><span class="badge bg-secondary">system.security.claims 4.3.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.kiota.serialization.text 1.1.2</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.kiota.serialization.form 1.1.3</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.kiota.abstractions 1.7.9</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.kiota.serialization.json 1.1.5</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.kiota.serialization.multipart 1.1.2</span></td><td><span class="badge bg-secondary">microsoft.graph 5.44.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
+<tr><td><span class="badge bg-secondary">microsoft.graph.core 3.1.8</span></td><td><span class="badge bg-secondary">netstandard.library 2.0.3</span><span style="display: none;">, </span><br><span class="badge bg-secondary">system.security.claims 4.3.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.kiota.serialization.form 1.1.3</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.kiota.abstractions 1.7.9</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.kiota.serialization.text 1.1.2</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.kiota.http.httpclientlibrary 1.3.6</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.kiota.serialization.json 1.1.5</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.kiota.authentication.azure 1.1.3</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.identitymodel.protocols.openidconnect 7.3.1</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.kiota.serialization.multipart 1.1.2</span></td><td><span class="badge bg-secondary">microsoft.graph 5.44.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.graph 5.44.0</span></td><td><span class="badge bg-secondary">microsoft.graph.core 3.1.8</span></td><td>-</td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
-<tr><td><span class="badge bg-light-blue">microsoft.fast.components.fluentui 3.5.5</span></td><td><span class="badge bg-secondary">microsoft.extensions.hosting.abstractions 7.0.0</span><span style="display: none;">, </span><br><span class="badge bg-danger">system.text.json 7.0.3</span></td><td>-</td><td>-</td><td><span class="badge bg-danger">High &#x2192; CVE-2024-30105</span></td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
-<tr><td><span class="badge bg-secondary">microsoft.extensions.primitives 8.0.0</span></td><td>-</td><td><span class="badge bg-secondary">microsoft.extensions.options 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.extensions.configuration.abstractions 8.0.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
+<tr><td><span class="badge bg-light-blue">microsoft.fast.components.fluentui 3.5.5</span></td><td><span class="badge bg-danger">system.text.json 7.0.3</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.extensions.hosting.abstractions 7.0.0</span></td><td>-</td><td>-</td><td><span class="badge bg-danger">High &#x2192; CVE-2024-30105</span></td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
+<tr><td><span class="badge bg-secondary">microsoft.extensions.primitives 8.0.0</span></td><td>-</td><td><span class="badge bg-secondary">microsoft.extensions.configuration.abstractions 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.extensions.options 8.0.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.extensions.options.dataannotations 6.0.0</span></td><td><span class="badge bg-secondary">system.componentmodel.annotations 5.0.0</span></td><td><span class="badge bg-secondary">microsoft.teamsfx 2.4.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.extensions.options.configurationextensions 8.0.0</span></td><td><span class="badge bg-secondary">microsoft.extensions.configuration.binder 8.0.0</span></td><td><span class="badge bg-secondary">microsoft.extensions.diagnostics 8.0.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
-<tr><td><span class="badge bg-secondary">microsoft.extensions.options 8.0.0</span></td><td><span class="badge bg-secondary">microsoft.extensions.primitives 8.0.0</span></td><td><span class="badge bg-secondary">microsoft.extensions.diagnostics.abstractions 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.aspnetcore.authorization 8.0.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
+<tr><td><span class="badge bg-secondary">microsoft.extensions.options 8.0.0</span></td><td><span class="badge bg-secondary">microsoft.extensions.primitives 8.0.0</span></td><td><span class="badge bg-secondary">microsoft.aspnetcore.authorization 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.extensions.diagnostics.abstractions 8.0.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.extensions.options 7.0.0</span></td><td>-</td><td><span class="badge bg-secondary">microsoft.aspnetcore.authorization 7.0.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
-<tr><td><span class="badge bg-secondary">microsoft.extensions.logging.abstractions 8.0.0</span></td><td><span class="badge bg-secondary">microsoft.extensions.dependencyinjection.abstractions 8.0.0</span></td><td><span class="badge bg-secondary">microsoft.extensions.http 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.aspnetcore.authorization 8.0.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
+<tr><td><span class="badge bg-secondary">microsoft.extensions.logging.abstractions 8.0.0</span></td><td><span class="badge bg-secondary">microsoft.extensions.dependencyinjection.abstractions 8.0.0</span></td><td><span class="badge bg-secondary">microsoft.aspnetcore.authorization 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.extensions.http 8.0.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.extensions.logging 8.0.0</span></td><td><span class="badge bg-secondary">microsoft.extensions.dependencyinjection 8.0.0</span></td><td><span class="badge bg-secondary">microsoft.extensions.http 8.0.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
-<tr><td><span class="badge bg-secondary">microsoft.extensions.http.polly 8.0.2</span></td><td><span class="badge bg-secondary">polly 7.2.4</span><span style="display: none;">, </span><br><span class="badge bg-secondary">polly.extensions.http 3.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.extensions.http 8.0.0</span></td><td>-</td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
-<tr><td><span class="badge bg-secondary">microsoft.extensions.http 8.0.0</span></td><td><span class="badge bg-secondary">microsoft.extensions.diagnostics 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.extensions.logging.abstractions 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.extensions.configuration.abstractions 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.extensions.dependencyinjection.abstractions 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.extensions.logging 8.0.0</span></td><td><span class="badge bg-secondary">microsoft.extensions.http.polly 8.0.2</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
+<tr><td><span class="badge bg-secondary">microsoft.extensions.http.polly 8.0.2</span></td><td><span class="badge bg-secondary">polly.extensions.http 3.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">polly 7.2.4</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.extensions.http 8.0.0</span></td><td>-</td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
+<tr><td><span class="badge bg-secondary">microsoft.extensions.http 8.0.0</span></td><td><span class="badge bg-secondary">microsoft.extensions.configuration.abstractions 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.extensions.dependencyinjection.abstractions 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.extensions.logging 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.extensions.diagnostics 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.extensions.logging.abstractions 8.0.0</span></td><td><span class="badge bg-secondary">microsoft.extensions.http.polly 8.0.2</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.extensions.hosting.abstractions 7.0.0</span></td><td><span class="badge bg-secondary">microsoft.extensions.fileproviders.abstractions 7.0.0</span></td><td><span class="badge bg-light-blue">microsoft.fast.components.fluentui 3.5.5</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.extensions.fileproviders.abstractions 7.0.0</span></td><td>-</td><td><span class="badge bg-secondary">microsoft.extensions.hosting.abstractions 7.0.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.extensions.diagnostics.abstractions 8.0.0</span></td><td><span class="badge bg-secondary">system.diagnostics.diagnosticsource 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.extensions.options 8.0.0</span></td><td><span class="badge bg-secondary">microsoft.extensions.diagnostics 8.0.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
-<tr><td><span class="badge bg-secondary">microsoft.extensions.diagnostics 8.0.0</span></td><td><span class="badge bg-secondary">microsoft.extensions.configuration 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.extensions.options.configurationextensions 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.extensions.diagnostics.abstractions 8.0.0</span></td><td><span class="badge bg-secondary">microsoft.extensions.http 8.0.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
-<tr><td><span class="badge bg-secondary">microsoft.extensions.dependencyinjection.abstractions 8.0.0</span></td><td>-</td><td><span class="badge bg-secondary">microsoft.extensions.logging.abstractions 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.extensions.http 8.0.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
+<tr><td><span class="badge bg-secondary">microsoft.extensions.diagnostics 8.0.0</span></td><td><span class="badge bg-secondary">microsoft.extensions.options.configurationextensions 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.extensions.diagnostics.abstractions 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.extensions.configuration 8.0.0</span></td><td><span class="badge bg-secondary">microsoft.extensions.http 8.0.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
+<tr><td><span class="badge bg-secondary">microsoft.extensions.dependencyinjection.abstractions 8.0.0</span></td><td>-</td><td><span class="badge bg-secondary">microsoft.extensions.http 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.extensions.logging.abstractions 8.0.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.extensions.dependencyinjection 8.0.0</span></td><td>-</td><td><span class="badge bg-secondary">microsoft.extensions.logging 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.aspnetcore.components.web 8.0.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.extensions.dependencyinjection 7.0.0</span></td><td>-</td><td><span class="badge bg-light-blue">microsoft.aspnetcore.components.web 7.0.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.extensions.configuration.binder 8.0.0</span></td><td>-</td><td><span class="badge bg-secondary">microsoft.extensions.options.configurationextensions 8.0.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
@@ -344,34 +351,76 @@
 <tr><td><span class="badge bg-secondary">microsoft.csharp 4.5.0</span></td><td>-</td><td><span class="badge bg-secondary">microsoft.bot.connector 4.21.1</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.bot.streaming 4.21.1</span></td><td><span class="badge bg-secondary">microsoft.net.http.headers 2.1.0</span></td><td><span class="badge bg-secondary">microsoft.bot.connector.streaming 4.21.1</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.bot.schema 4.21.1</span></td><td><span class="badge bg-secondary">newtonsoft.json 13.0.1</span></td><td><span class="badge bg-secondary">microsoft.bot.connector.streaming 4.21.1</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
-<tr><td><span class="badge bg-secondary">microsoft.bot.connector.streaming 4.21.1</span></td><td><span class="badge bg-secondary">microsoft.bot.schema 4.21.1</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.bot.streaming 4.21.1</span></td><td><span class="badge bg-secondary">microsoft.bot.builder 4.21.1</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
-<tr><td><span class="badge bg-secondary">microsoft.bot.connector 4.21.1</span></td><td><span class="badge bg-secondary">microsoft.rest.clientruntime 2.3.24</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.csharp 4.5.0</span></td><td><span class="badge bg-secondary">microsoft.bot.builder 4.21.1</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
-<tr><td><span class="badge bg-secondary">microsoft.bot.builder.dialogs 4.21.1</span></td><td><span class="badge bg-secondary">microsoft.recognizers.text.datetime 1.3.2</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.recognizers.text.choice 1.3.2</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.bot.builder 4.21.1</span></td><td><span class="badge bg-secondary">microsoft.teamsfx 2.4.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
-<tr><td><span class="badge bg-secondary">microsoft.bot.builder 4.21.1</span></td><td><span class="badge bg-secondary">microsoft.bot.connector 4.21.1</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.bot.connector.streaming 4.21.1</span></td><td><span class="badge bg-secondary">microsoft.bot.builder.dialogs 4.21.1</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
+<tr><td><span class="badge bg-secondary">microsoft.bot.connector.streaming 4.21.1</span></td><td><span class="badge bg-secondary">microsoft.bot.streaming 4.21.1</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.bot.schema 4.21.1</span></td><td><span class="badge bg-secondary">microsoft.bot.builder 4.21.1</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
+<tr><td><span class="badge bg-secondary">microsoft.bot.connector 4.21.1</span></td><td><span class="badge bg-secondary">microsoft.csharp 4.5.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.rest.clientruntime 2.3.24</span></td><td><span class="badge bg-secondary">microsoft.bot.builder 4.21.1</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
+<tr><td><span class="badge bg-secondary">microsoft.bot.builder.dialogs 4.21.1</span></td><td><span class="badge bg-secondary">microsoft.recognizers.text.datetime 1.3.2</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.bot.builder 4.21.1</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.recognizers.text.choice 1.3.2</span></td><td><span class="badge bg-secondary">microsoft.teamsfx 2.4.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
+<tr><td><span class="badge bg-secondary">microsoft.bot.builder 4.21.1</span></td><td><span class="badge bg-secondary">microsoft.bot.connector.streaming 4.21.1</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.bot.connector 4.21.1</span></td><td><span class="badge bg-secondary">microsoft.bot.builder.dialogs 4.21.1</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.bcl.asyncinterfaces 1.1.1</span></td><td>-</td><td><span class="badge bg-secondary">azure.core 1.37.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.aspnetcore.metadata 8.0.0</span></td><td>-</td><td><span class="badge bg-secondary">microsoft.aspnetcore.authorization 8.0.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.aspnetcore.metadata 7.0.0</span></td><td>-</td><td><span class="badge bg-secondary">microsoft.aspnetcore.authorization 7.0.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
-<tr><td><span class="badge bg-secondary">microsoft.aspnetcore.components.web 8.0.0</span></td><td><span class="badge bg-secondary">microsoft.extensions.dependencyinjection 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.jsinterop 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">system.io.pipelines 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.aspnetcore.components.forms 8.0.0</span></td><td><span class="badge bg-secondary">antdesign 0.18.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
-<tr><td><span class="badge bg-light-blue">microsoft.aspnetcore.components.web 7.0.0</span></td><td><span class="badge bg-secondary">microsoft.extensions.dependencyinjection 7.0.0</span><span style="display: none;">, </span><br><span class="badge bg-light-blue">microsoft.aspnetcore.components.forms 7.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">system.io.pipelines 7.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.jsinterop 7.0.0</span></td><td><span class="badge bg-light-blue">fluxor.blazor.web 5.9.1</span></td><td>-</td><td><span class="badge bg-orange">Medium &#x2192; CVE-2023-36558</span></td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
+<tr><td><span class="badge bg-secondary">microsoft.aspnetcore.components.web 8.0.0</span></td><td><span class="badge bg-secondary">microsoft.extensions.dependencyinjection 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">system.io.pipelines 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.jsinterop 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.aspnetcore.components.forms 8.0.0</span></td><td><span class="badge bg-secondary">antdesign 0.18.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
+<tr><td><span class="badge bg-light-blue">microsoft.aspnetcore.components.web 7.0.0</span></td><td><span class="badge bg-light-blue">microsoft.aspnetcore.components.forms 7.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">system.io.pipelines 7.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.jsinterop 7.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.extensions.dependencyinjection 7.0.0</span></td><td><span class="badge bg-light-blue">fluxor.blazor.web 5.9.1</span></td><td>-</td><td><span class="badge bg-orange">Medium &#x2192; CVE-2023-36558</span></td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.aspnetcore.components.forms 8.0.0</span></td><td><span class="badge bg-secondary">microsoft.aspnetcore.components 8.0.0</span></td><td><span class="badge bg-secondary">microsoft.aspnetcore.components.web 8.0.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-light-blue">microsoft.aspnetcore.components.forms 7.0.0</span></td><td><span class="badge bg-orange">microsoft.aspnetcore.components 7.0.0</span></td><td><span class="badge bg-light-blue">microsoft.aspnetcore.components.web 7.0.0</span></td><td>-</td><td><span class="badge bg-orange">Medium &#x2192; CVE-2023-36558</span></td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.aspnetcore.components.dataannotations.validation 3.2.0-rc1.20223.4</span></td><td>-</td><td><span class="badge bg-secondary">antdesign 0.18.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">Apache-2.0</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.aspnetcore.components.analyzers 8.0.0</span></td><td>-</td><td><span class="badge bg-secondary">microsoft.aspnetcore.components 8.0.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.aspnetcore.components.analyzers 7.0.0</span></td><td>-</td><td><span class="badge bg-orange">microsoft.aspnetcore.components 7.0.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
-<tr><td><span class="badge bg-secondary">microsoft.aspnetcore.components 8.0.0</span></td><td><span class="badge bg-secondary">microsoft.aspnetcore.components.analyzers 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.aspnetcore.authorization 8.0.0</span></td><td><span class="badge bg-secondary">microsoft.aspnetcore.components.forms 8.0.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
+<tr><td><span class="badge bg-secondary">microsoft.aspnetcore.components 8.0.0</span></td><td><span class="badge bg-secondary">microsoft.aspnetcore.authorization 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.aspnetcore.components.analyzers 8.0.0</span></td><td><span class="badge bg-secondary">microsoft.aspnetcore.components.forms 8.0.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-orange">microsoft.aspnetcore.components 7.0.0</span></td><td><span class="badge bg-secondary">microsoft.aspnetcore.authorization 7.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.aspnetcore.components.analyzers 7.0.0</span></td><td><span class="badge bg-light-blue">microsoft.aspnetcore.components.forms 7.0.0</span></td><td><span class="badge bg-orange">Medium &#x2192; CVE-2023-36558</span></td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
-<tr><td><span class="badge bg-secondary">microsoft.aspnetcore.authorization 8.0.0</span></td><td><span class="badge bg-secondary">microsoft.aspnetcore.metadata 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.extensions.logging.abstractions 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.extensions.options 8.0.0</span></td><td><span class="badge bg-secondary">microsoft.aspnetcore.components 8.0.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
-<tr><td><span class="badge bg-secondary">microsoft.aspnetcore.authorization 7.0.0</span></td><td><span class="badge bg-secondary">microsoft.aspnetcore.metadata 7.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.extensions.options 7.0.0</span></td><td><span class="badge bg-orange">microsoft.aspnetcore.components 7.0.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
+<tr><td><span class="badge bg-secondary">microsoft.aspnetcore.authorization 8.0.0</span></td><td><span class="badge bg-secondary">microsoft.extensions.logging.abstractions 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.aspnetcore.metadata 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.extensions.options 8.0.0</span></td><td><span class="badge bg-secondary">microsoft.aspnetcore.components 8.0.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
+<tr><td><span class="badge bg-secondary">microsoft.aspnetcore.authorization 7.0.0</span></td><td><span class="badge bg-secondary">microsoft.extensions.options 7.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.aspnetcore.metadata 7.0.0</span></td><td><span class="badge bg-orange">microsoft.aspnetcore.components 7.0.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">microsoft.aspnetcore.authentication.jwtbearer 8.0.2</span></td><td>-</td><td>-</td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
-<tr><td><span class="badge bg-light-blue">fluxor.blazor.web.reduxdevtools 5.9.1</span></td><td><span class="badge bg-light-blue">fluxor.blazor.web 5.9.1</span><span style="display: none;">, </span><br><span class="badge bg-secondary">newtonsoft.json 13.0.1</span></td><td>-</td><td>-</td><td><span class="badge bg-orange">Medium &#x2192; CVE-2023-36558</span></td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
-<tr><td><span class="badge bg-light-blue">fluxor.blazor.web 5.9.1</span></td><td><span class="badge bg-light-blue">microsoft.aspnetcore.components.web 7.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">fluxor 5.9.1</span></td><td><span class="badge bg-light-blue">fluxor.blazor.web.reduxdevtools 5.9.1</span></td><td>-</td><td><span class="badge bg-orange">Medium &#x2192; CVE-2023-36558</span></td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
+<tr><td><span class="badge bg-light-blue">fluxor.blazor.web.reduxdevtools 5.9.1</span></td><td><span class="badge bg-secondary">newtonsoft.json 13.0.1</span><span style="display: none;">, </span><br><span class="badge bg-light-blue">fluxor.blazor.web 5.9.1</span></td><td>-</td><td>-</td><td><span class="badge bg-orange">Medium &#x2192; CVE-2023-36558</span></td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
+<tr><td><span class="badge bg-light-blue">fluxor.blazor.web 5.9.1</span></td><td><span class="badge bg-secondary">fluxor 5.9.1</span><span style="display: none;">, </span><br><span class="badge bg-light-blue">microsoft.aspnetcore.components.web 7.0.0</span></td><td><span class="badge bg-light-blue">fluxor.blazor.web.reduxdevtools 5.9.1</span></td><td>-</td><td><span class="badge bg-orange">Medium &#x2192; CVE-2023-36558</span></td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">fluxor 5.9.1</span></td><td>-</td><td><span class="badge bg-light-blue">fluxor.blazor.web 5.9.1</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 <tr><td><span class="badge bg-secondary">fluentvalidation.dependencyinjectionextensions 11.9.0</span></td><td><span class="badge bg-secondary">fluentvalidation 11.9.0</span></td><td>-</td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">Apache-2.0</span></td></tr>
 <tr><td><span class="badge bg-secondary">fluentvalidation 11.9.0</span></td><td>-</td><td><span class="badge bg-secondary">fluentvalidation.dependencyinjectionextensions 11.9.0</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">Apache-2.0</span></td></tr>
-<tr><td><span class="badge bg-secondary">azure.core 1.37.0</span></td><td><span class="badge bg-secondary">system.memory.data 1.0.2</span><span style="display: none;">, </span><br><span class="badge bg-secondary">system.tSWeading.tasks.extensions 4.5.4</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.bcl.asyncinterfaces 1.1.1</span><span style="display: none;">, </span><br><span class="badge bg-secondary">system.numerics.vectors 4.5.0</span></td><td><span class="badge bg-secondary">microsoft.kiota.authentication.azure 1.1.3</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
-<tr><td><span class="badge bg-secondary">antdesign 0.18.0</span></td><td><span class="badge bg-secondary">microsoft.aspnetcore.components.web 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">oneof 2.1.155</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.aspnetcore.components.dataannotations.validation 3.2.0-rc1.20223.4</span></td><td>-</td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
+<tr><td><span class="badge bg-secondary">azure.core 1.37.0</span></td><td><span class="badge bg-secondary">system.tSWeading.tasks.extensions 4.5.4</span><span style="display: none;">, </span><br><span class="badge bg-secondary">system.numerics.vectors 4.5.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.bcl.asyncinterfaces 1.1.1</span><span style="display: none;">, </span><br><span class="badge bg-secondary">system.memory.data 1.0.2</span></td><td><span class="badge bg-secondary">microsoft.kiota.authentication.azure 1.1.3</span></td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
+<tr><td><span class="badge bg-secondary">antdesign 0.18.0</span></td><td><span class="badge bg-secondary">oneof 2.1.155</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.aspnetcore.components.web 8.0.0</span><span style="display: none;">, </span><br><span class="badge bg-secondary">microsoft.aspnetcore.components.dataannotations.validation 3.2.0-rc1.20223.4</span></td><td>-</td><td>-</td><td>-</td><td><span class="badge border border-dark text-dark">MIT</span></td></tr>
 </tbody></table>
             </div>
+    </div>
+    <br>
+    <h3 class="light-text">Vulnerabilities table</h3>
+    <div id="vulnerabilities-table-container">
+        This table focuses on vulnerabilities and shows the components that are affected either directly or transitively.<br>
+        The colors of the elements in column "Vulnerability" indicate the severity of the vulnerabilities:
+        <ul>
+            <li><b>Dark red:</b> critical.</li>
+            <li><b>Red:</b> high.</li>
+            <li><b>Orange:</b> medium.</li>  
+            <li><b>Yellow:</b>low.</li>  
+            <li><b>Green:</b>informational.</li> 
+        </ul>
+        <br>
+        The colors of the elements in columns "Directly vulnerable components" and "Transitively vulnerable components" indicate the vulnerability status of the components:
+        <ul>
+            <li><b>Dark red:</b> affected by at least one critical severity vulnerability.</li>
+            <li><b>Red:</b> affected by at least one high severity vulnerability.</li>
+            <li><b>Orange:</b> affected by at least one medium severity vulnerability.</li>  
+            <li><b>Yellow:</b> affected by at least one low severity vulnerability.</li>  
+            <li><b>Green:</b> affected by at least one informational severity vulnerability.</li>  
+            <li><b>Light blue:</b> not directly affected by vulnerabilities but has at least one vulnerable dependency.</li> 
+        </ul>
+        <hr><br>
+                <table id="vulnerabilities-table" class="table table-striped table-bordered" style="width:100%"><thead>
+        <tr>
+            <th>Vulnerability</th>
+            <th>Severity</th>
+            <th>Score</th>
+            <th>Vector</th>
+            <th>Directly vulnerable <br>components</th>
+            <th>Transitively vulnerable <br>components</th>
+        </tr>
+        <tr>
+            <th><input type="text" placeholder="Search Vulnerability" class="form-control search-in-table-vuln"></th>
+            <th><input type="text" placeholder="Search Severity" class="form-control search-in-table-vuln"></th>
+            <th><input type="text" placeholder="Search Score" class="form-control search-in-table-vuln"></th>
+            <th><input type="text" placeholder="Search Vector" class="form-control search-in-table-vuln"></th>
+            <th><input type="text" placeholder="Search Directly vulnerable components" class="form-control search-in-table-vuln"></th>
+            <th><input type="text" placeholder="Search Transitively vulnerable components" class="form-control search-in-table-vuln"></th>
+        </tr>
+    </thead><tbody><tr><td><span class="badge bg-danger">CVE-2024-30105</span></td><td>High</td><td>7.5</td><td>AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H</td><td><span class="badge bg-danger">system.text.json 7.0.3</span></td><td><span class="badge bg-light-blue">microsoft.fast.components.fluentui 3.5.5</span></td></tr><tr><td><span class="badge bg-yellow">CVE-2024-27086</span></td><td>Low</td><td>3.9</td><td>AV:L/AC:L/PR:L/UI:R/S:U/C:N/I:L/A:L</td><td><span class="badge bg-orange">microsoft.identity.client 4.59.0</span></td><td>-</td></tr><tr><td><span class="badge bg-orange">CVE-2024-35255</span></td><td>Medium</td><td>5.5</td><td>AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N</td><td><span class="badge bg-orange">microsoft.identity.client 4.59.0</span></td><td>-</td></tr><tr><td><span class="badge bg-orange">CVE-2023-36558</span></td><td>Medium</td><td>5.5</td><td>AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N</td><td><span class="badge bg-orange">microsoft.aspnetcore.components 7.0.0</span></td><td><span class="badge bg-light-blue">fluxor.blazor.web 5.9.1</span><span style="display: none;">, </span><br><span class="badge bg-light-blue">fluxor.blazor.web.reduxdevtools 5.9.1</span><span style="display: none;">, </span><br><span class="badge bg-light-blue">microsoft.aspnetcore.components.web 7.0.0</span><span style="display: none;">, </span><br><span class="badge bg-light-blue">microsoft.aspnetcore.components.forms 7.0.0</span></td></tr></tbody></table>
     </div>
     <script type="text/javascript">
         function showDiv(divId) {
@@ -476,115 +525,11 @@
             }
           },
           {
-            "name": "microsoft.recognizers.text.choice <b>1.3.2</b><br><br>License:<br><li>MIT</li>",
-            "children": [
-              {
-                "name": "microsoft.recognizers.text <b>1.3.2</b><br><br>License:<br><li>MIT</li>",
-                "children": [
-                  {
-                    "name": "system.collections.immutable <b>1.4.0</b><br><br>License:<br><li>MIT</li>",
-                    "children": [],
-                    "value": 1,
-                    "itemStyle": {
-                      "color": "#bcbcbc",
-                      "borderWidth": 2
-                    }
-                  },
-                  {
-                    "name": "microsoft.extensions.caching.memory <b>2.0.0</b><br><br>License:<br><li>Apache-2.0</li>",
-                    "children": [
-                      {
-                        "name": "microsoft.extensions.caching.abstractions <b>2.0.0</b><br><br>License:<br><li>Apache-2.0</li>",
-                        "children": [],
-                        "value": 1,
-                        "itemStyle": {
-                          "color": "#bcbcbc",
-                          "borderWidth": 2
-                        }
-                      }
-                    ],
-                    "value": 1,
-                    "itemStyle": {
-                      "color": "#bcbcbc",
-                      "borderWidth": 2
-                    }
-                  },
-                  {
-                    "name": "system.valuetuple <b>4.4.0</b><br><br>License:<br><li>MIT</li>",
-                    "children": [],
-                    "value": 1,
-                    "itemStyle": {
-                      "color": "#bcbcbc",
-                      "borderWidth": 2
-                    }
-                  }
-                ],
-                "value": 3,
-                "itemStyle": {
-                  "color": "#bcbcbc",
-                  "borderWidth": 2
-                }
-              }
-            ],
-            "value": 3,
-            "itemStyle": {
-              "color": "#bcbcbc",
-              "borderWidth": 2
-            }
-          },
-          {
             "name": "microsoft.bot.builder <b>4.21.1</b><br><br>License:<br><li>MIT</li>",
             "children": [
               {
-                "name": "microsoft.bot.connector <b>4.21.1</b><br><br>License:<br><li>MIT</li>",
-                "children": [
-                  {
-                    "name": "microsoft.rest.clientruntime <b>2.3.24</b><br><br>License:<br><li>MIT</li>",
-                    "children": [],
-                    "value": 1,
-                    "itemStyle": {
-                      "color": "#bcbcbc",
-                      "borderWidth": 2
-                    }
-                  },
-                  {
-                    "name": "microsoft.csharp <b>4.5.0</b><br><br>License:<br><li>MIT</li>",
-                    "children": [],
-                    "value": 1,
-                    "itemStyle": {
-                      "color": "#bcbcbc",
-                      "borderWidth": 2
-                    }
-                  }
-                ],
-                "value": 2,
-                "itemStyle": {
-                  "color": "#bcbcbc",
-                  "borderWidth": 2
-                }
-              },
-              {
                 "name": "microsoft.bot.connector.streaming <b>4.21.1</b><br><br>License:<br><li>MIT</li>",
                 "children": [
-                  {
-                    "name": "microsoft.bot.schema <b>4.21.1</b><br><br>License:<br><li>MIT</li>",
-                    "children": [
-                      {
-                        "name": "newtonsoft.json <b>13.0.1</b><br><br>License:<br><li>MIT</li>",
-                        "children": [],
-                        "value": 1,
-                        "itemStyle": {
-                          "color": "#bcbcbc",
-                          "borderWidth": 2
-                        }
-                      }
-                    ],
-                    "value": 1,
-                    "itemStyle": {
-                      "color": "#bcbcbc",
-                      "borderWidth": 2
-                    }
-                  },
                   {
                     "name": "microsoft.bot.streaming <b>4.21.1</b><br><br>License:<br><li>MIT</li>",
                     "children": [
@@ -613,6 +558,53 @@
                       "color": "#bcbcbc",
                       "borderWidth": 2
                     }
+                  },
+                  {
+                    "name": "microsoft.bot.schema <b>4.21.1</b><br><br>License:<br><li>MIT</li>",
+                    "children": [
+                      {
+                        "name": "newtonsoft.json <b>13.0.1</b><br><br>License:<br><li>MIT</li>",
+                        "children": [],
+                        "value": 1,
+                        "itemStyle": {
+                          "color": "#bcbcbc",
+                          "borderWidth": 2
+                        }
+                      }
+                    ],
+                    "value": 1,
+                    "itemStyle": {
+                      "color": "#bcbcbc",
+                      "borderWidth": 2
+                    }
+                  }
+                ],
+                "value": 2,
+                "itemStyle": {
+                  "color": "#bcbcbc",
+                  "borderWidth": 2
+                }
+              },
+              {
+                "name": "microsoft.bot.connector <b>4.21.1</b><br><br>License:<br><li>MIT</li>",
+                "children": [
+                  {
+                    "name": "microsoft.csharp <b>4.5.0</b><br><br>License:<br><li>MIT</li>",
+                    "children": [],
+                    "value": 1,
+                    "itemStyle": {
+                      "color": "#bcbcbc",
+                      "borderWidth": 2
+                    }
+                  },
+                  {
+                    "name": "microsoft.rest.clientruntime <b>2.3.24</b><br><br>License:<br><li>MIT</li>",
+                    "children": [],
+                    "value": 1,
+                    "itemStyle": {
+                      "color": "#bcbcbc",
+                      "borderWidth": 2
+                    }
                   }
                 ],
                 "value": 2,
@@ -623,6 +615,63 @@
               }
             ],
             "value": 4,
+            "itemStyle": {
+              "color": "#bcbcbc",
+              "borderWidth": 2
+            }
+          },
+          {
+            "name": "microsoft.recognizers.text.choice <b>1.3.2</b><br><br>License:<br><li>MIT</li>",
+            "children": [
+              {
+                "name": "microsoft.recognizers.text <b>1.3.2</b><br><br>License:<br><li>MIT</li>",
+                "children": [
+                  {
+                    "name": "microsoft.extensions.caching.memory <b>2.0.0</b><br><br>License:<br><li>Apache-2.0</li>",
+                    "children": [
+                      {
+                        "name": "microsoft.extensions.caching.abstractions <b>2.0.0</b><br><br>License:<br><li>Apache-2.0</li>",
+                        "children": [],
+                        "value": 1,
+                        "itemStyle": {
+                          "color": "#bcbcbc",
+                          "borderWidth": 2
+                        }
+                      }
+                    ],
+                    "value": 1,
+                    "itemStyle": {
+                      "color": "#bcbcbc",
+                      "borderWidth": 2
+                    }
+                  },
+                  {
+                    "name": "system.collections.immutable <b>1.4.0</b><br><br>License:<br><li>MIT</li>",
+                    "children": [],
+                    "value": 1,
+                    "itemStyle": {
+                      "color": "#bcbcbc",
+                      "borderWidth": 2
+                    }
+                  },
+                  {
+                    "name": "system.valuetuple <b>4.4.0</b><br><br>License:<br><li>MIT</li>",
+                    "children": [],
+                    "value": 1,
+                    "itemStyle": {
+                      "color": "#bcbcbc",
+                      "borderWidth": 2
+                    }
+                  }
+                ],
+                "value": 3,
+                "itemStyle": {
+                  "color": "#bcbcbc",
+                  "borderWidth": 2
+                }
+              }
+            ],
+            "value": 3,
             "itemStyle": {
               "color": "#bcbcbc",
               "borderWidth": 2
@@ -677,71 +726,6 @@
         "name": "microsoft.graph.core <b>3.1.8</b><br><br>License:<br><li>MIT</li>",
         "children": [
           {
-            "name": "microsoft.kiota.http.httpclientlibrary <b>1.3.6</b><br><br>License:<br><li>MIT</li>",
-            "children": [],
-            "value": 1,
-            "itemStyle": {
-              "color": "#bcbcbc",
-              "borderWidth": 2
-            }
-          },
-          {
-            "name": "microsoft.kiota.authentication.azure <b>1.1.3</b><br><br>License:<br><li>MIT</li>",
-            "children": [
-              {
-                "name": "azure.core <b>1.37.0</b><br><br>License:<br><li>MIT</li>",
-                "children": [
-                  {
-                    "name": "system.memory.data <b>1.0.2</b><br><br>License:<br><li>MIT</li>",
-                    "children": [],
-                    "value": 1,
-                    "itemStyle": {
-                      "color": "#bcbcbc",
-                      "borderWidth": 2
-                    }
-                  },
-                  {
-                    "name": "system.tSWeading.tasks.extensions <b>4.5.4</b><br><br>License:<br><li>MIT</li>",
-                    "children": [],
-                    "value": 1,
-                    "itemStyle": {
-                      "color": "#bcbcbc",
-                      "borderWidth": 2
-                    }
-                  },
-                  {
-                    "name": "microsoft.bcl.asyncinterfaces <b>1.1.1</b><br><br>License:<br><li>MIT</li>",
-                    "children": [],
-                    "value": 1,
-                    "itemStyle": {
-                      "color": "#bcbcbc",
-                      "borderWidth": 2
-                    }
-                  },
-                  {
-                    "name": "system.numerics.vectors <b>4.5.0</b><br><br>License:<br><li>MIT</li>",
-                    "children": [],
-                    "value": 1,
-                    "itemStyle": {
-                      "color": "#bcbcbc",
-                      "borderWidth": 2
-                    }
-                  }
-                ],
-                "value": 4,
-                "itemStyle": {
-                  "color": "#bcbcbc",
-                  "borderWidth": 2
-                }
-              }
-            ],
-            "value": 4,
-            "itemStyle": {
-              "color": "#bcbcbc",
-              "borderWidth": 2
-            }
-          },
-          {
             "name": "netstandard.library <b>2.0.3</b><br><br>License:<br><li>MIT</li>",
             "children": [
               {
@@ -761,130 +745,8 @@
             }
           },
           {
-            "name": "microsoft.identitymodel.protocols.openidconnect <b>7.3.1</b><br><br>License:<br><li>MIT</li>",
-            "children": [
-              {
-                "name": "system.identitymodel.tokens.jwt <b>7.3.1</b><br><br>License:<br><li>MIT</li>",
-                "children": [
-                  {
-                    "name": "microsoft.identitymodel.jsonwebtokens <b>7.3.1</b><br><br>License:<br><li>MIT</li>",
-                    "children": [],
-                    "value": 1,
-                    "itemStyle": {
-                      "color": "#bcbcbc",
-                      "borderWidth": 2
-                    }
-                  }
-                ],
-                "value": 1,
-                "itemStyle": {
-                  "color": "#bcbcbc",
-                  "borderWidth": 2
-                }
-              },
-              {
-                "name": "microsoft.identitymodel.protocols <b>7.3.1</b><br><br>License:<br><li>MIT</li>",
-                "children": [
-                  {
-                    "name": "microsoft.identitymodel.tokens <b>7.3.1</b><br><br>License:<br><li>MIT</li>",
-                    "children": [],
-                    "value": 1,
-                    "itemStyle": {
-                      "color": "#bcbcbc",
-                      "borderWidth": 2
-                    }
-                  },
-                  {
-                    "name": "microsoft.identitymodel.logging <b>7.3.1</b><br><br>License:<br><li>MIT</li>",
-                    "children": [
-                      {
-                        "name": "microsoft.identitymodel.abstractions <b>7.3.1</b><br><br>License:<br><li>MIT</li>",
-                        "children": [],
-                        "value": 1,
-                        "itemStyle": {
-                          "color": "#bcbcbc",
-                          "borderWidth": 2
-                        }
-                      }
-                    ],
-                    "value": 1,
-                    "itemStyle": {
-                      "color": "#bcbcbc",
-                      "borderWidth": 2
-                    }
-                  }
-                ],
-                "value": 2,
-                "itemStyle": {
-                  "color": "#bcbcbc",
-                  "borderWidth": 2
-                }
-              }
-            ],
-            "value": 3,
-            "itemStyle": {
-              "color": "#bcbcbc",
-              "borderWidth": 2
-            }
-          },
-          {
             "name": "system.security.claims <b>4.3.0</b><br><br>License:<br><li>Microsoft .NET Library EULA</li><li>Microsoft .NET Library License</li>",
             "children": [
-              {
-                "name": "system.runtime.extensions <b>4.3.0</b><br><br>License:<br><li>Microsoft .NET Library EULA</li><li>Microsoft .NET Library License</li><li>Microsoft .NET Library RTW</li>",
-                "children": [],
-                "value": 1,
-                "itemStyle": {
-                  "color": "#bcbcbc",
-                  "borderWidth": 2
-                }
-              },
-              {
-                "name": "system.security.principal <b>4.3.0</b><br><br>License:<br><li>Microsoft .NET Library EULA</li><li>Microsoft .NET Library License</li>",
-                "children": [],
-                "value": 1,
-                "itemStyle": {
-                  "color": "#bcbcbc",
-                  "borderWidth": 2
-                }
-              },
-              {
-                "name": "system.globalization <b>4.3.0</b><br><br>License:<br><li>Microsoft .NET Library EULA</li><li>Microsoft .NET Library License</li>",
-                "children": [],
-                "value": 1,
-                "itemStyle": {
-                  "color": "#bcbcbc",
-                  "borderWidth": 2
-                }
-              },
-              {
-                "name": "system.collections <b>4.3.0</b><br><br>License:<br><li>Microsoft .NET Library EULA</li><li>Microsoft .NET Library License</li><li>Microsoft .NET Library RTW</li>",
-                "children": [
-                  {
-                    "name": "microsoft.netcore.targets <b>1.1.0</b><br><br>License:<br><li>Microsoft .NET Library EULA</li><li>Microsoft .NET Library License</li><li>Microsoft .NET Library RTW</li>",
-                    "children": [],
-                    "value": 1,
-                    "itemStyle": {
-                      "color": "#bcbcbc",
-                      "borderWidth": 2
-                    }
-                  },
-                  {
-                    "name": "system.runtime <b>4.3.0</b><br><br>License:<br><li>Microsoft .NET Library EULA</li><li>Microsoft .NET Library License</li><li>Microsoft .NET Library RTW</li>",
-                    "children": [],
-                    "value": 1,
-                    "itemStyle": {
-                      "color": "#bcbcbc",
-                      "borderWidth": 2
-                    }
-                  }
-                ],
-                "value": 2,
-                "itemStyle": {
-                  "color": "#bcbcbc",
-                  "borderWidth": 2
-                }
-              },
               {
                 "name": "system.resources.resourcemanager <b>4.3.0</b><br><br>License:<br><li>Microsoft .NET Library EULA</li><li>Microsoft .NET Library License</li><li>Microsoft .NET Library RTW</li>",
                 "children": [
@@ -908,6 +770,33 @@
                     }
                   }
                 ],
+                "value": 1,
+                "itemStyle": {
+                  "color": "#bcbcbc",
+                  "borderWidth": 2
+                }
+              },
+              {
+                "name": "system.security.principal <b>4.3.0</b><br><br>License:<br><li>Microsoft .NET Library EULA</li><li>Microsoft .NET Library License</li>",
+                "children": [],
+                "value": 1,
+                "itemStyle": {
+                  "color": "#bcbcbc",
+                  "borderWidth": 2
+                }
+              },
+              {
+                "name": "system.runtime.extensions <b>4.3.0</b><br><br>License:<br><li>Microsoft .NET Library EULA</li><li>Microsoft .NET Library License</li><li>Microsoft .NET Library RTW</li>",
+                "children": [],
+                "value": 1,
+                "itemStyle": {
+                  "color": "#bcbcbc",
+                  "borderWidth": 2
+                }
+              },
+              {
+                "name": "system.globalization <b>4.3.0</b><br><br>License:<br><li>Microsoft .NET Library EULA</li><li>Microsoft .NET Library License</li>",
+                "children": [],
                 "value": 1,
                 "itemStyle": {
                   "color": "#bcbcbc",
@@ -941,18 +830,37 @@
                   "color": "#bcbcbc",
                   "borderWidth": 2
                 }
+              },
+              {
+                "name": "system.collections <b>4.3.0</b><br><br>License:<br><li>Microsoft .NET Library EULA</li><li>Microsoft .NET Library License</li><li>Microsoft .NET Library RTW</li>",
+                "children": [
+                  {
+                    "name": "microsoft.netcore.targets <b>1.1.0</b><br><br>License:<br><li>Microsoft .NET Library EULA</li><li>Microsoft .NET Library License</li><li>Microsoft .NET Library RTW</li>",
+                    "children": [],
+                    "value": 1,
+                    "itemStyle": {
+                      "color": "#bcbcbc",
+                      "borderWidth": 2
+                    }
+                  },
+                  {
+                    "name": "system.runtime <b>4.3.0</b><br><br>License:<br><li>Microsoft .NET Library EULA</li><li>Microsoft .NET Library License</li><li>Microsoft .NET Library RTW</li>",
+                    "children": [],
+                    "value": 1,
+                    "itemStyle": {
+                      "color": "#bcbcbc",
+                      "borderWidth": 2
+                    }
+                  }
+                ],
+                "value": 2,
+                "itemStyle": {
+                  "color": "#bcbcbc",
+                  "borderWidth": 2
+                }
               }
             ],
             "value": 8,
-            "itemStyle": {
-              "color": "#bcbcbc",
-              "borderWidth": 2
-            }
-          },
-          {
-            "name": "microsoft.kiota.serialization.text <b>1.1.2</b><br><br>License:<br><li>MIT</li>",
-            "children": [],
-            "value": 1,
             "itemStyle": {
               "color": "#bcbcbc",
               "borderWidth": 2
@@ -987,9 +895,150 @@
             }
           },
           {
+            "name": "microsoft.kiota.serialization.text <b>1.1.2</b><br><br>License:<br><li>MIT</li>",
+            "children": [],
+            "value": 1,
+            "itemStyle": {
+              "color": "#bcbcbc",
+              "borderWidth": 2
+            }
+          },
+          {
+            "name": "microsoft.kiota.http.httpclientlibrary <b>1.3.6</b><br><br>License:<br><li>MIT</li>",
+            "children": [],
+            "value": 1,
+            "itemStyle": {
+              "color": "#bcbcbc",
+              "borderWidth": 2
+            }
+          },
+          {
             "name": "microsoft.kiota.serialization.json <b>1.1.5</b><br><br>License:<br><li>MIT</li>",
             "children": [],
             "value": 1,
+            "itemStyle": {
+              "color": "#bcbcbc",
+              "borderWidth": 2
+            }
+          },
+          {
+            "name": "microsoft.kiota.authentication.azure <b>1.1.3</b><br><br>License:<br><li>MIT</li>",
+            "children": [
+              {
+                "name": "azure.core <b>1.37.0</b><br><br>License:<br><li>MIT</li>",
+                "children": [
+                  {
+                    "name": "system.tSWeading.tasks.extensions <b>4.5.4</b><br><br>License:<br><li>MIT</li>",
+                    "children": [],
+                    "value": 1,
+                    "itemStyle": {
+                      "color": "#bcbcbc",
+                      "borderWidth": 2
+                    }
+                  },
+                  {
+                    "name": "system.numerics.vectors <b>4.5.0</b><br><br>License:<br><li>MIT</li>",
+                    "children": [],
+                    "value": 1,
+                    "itemStyle": {
+                      "color": "#bcbcbc",
+                      "borderWidth": 2
+                    }
+                  },
+                  {
+                    "name": "microsoft.bcl.asyncinterfaces <b>1.1.1</b><br><br>License:<br><li>MIT</li>",
+                    "children": [],
+                    "value": 1,
+                    "itemStyle": {
+                      "color": "#bcbcbc",
+                      "borderWidth": 2
+                    }
+                  },
+                  {
+                    "name": "system.memory.data <b>1.0.2</b><br><br>License:<br><li>MIT</li>",
+                    "children": [],
+                    "value": 1,
+                    "itemStyle": {
+                      "color": "#bcbcbc",
+                      "borderWidth": 2
+                    }
+                  }
+                ],
+                "value": 4,
+                "itemStyle": {
+                  "color": "#bcbcbc",
+                  "borderWidth": 2
+                }
+              }
+            ],
+            "value": 4,
+            "itemStyle": {
+              "color": "#bcbcbc",
+              "borderWidth": 2
+            }
+          },
+          {
+            "name": "microsoft.identitymodel.protocols.openidconnect <b>7.3.1</b><br><br>License:<br><li>MIT</li>",
+            "children": [
+              {
+                "name": "system.identitymodel.tokens.jwt <b>7.3.1</b><br><br>License:<br><li>MIT</li>",
+                "children": [
+                  {
+                    "name": "microsoft.identitymodel.jsonwebtokens <b>7.3.1</b><br><br>License:<br><li>MIT</li>",
+                    "children": [],
+                    "value": 1,
+                    "itemStyle": {
+                      "color": "#bcbcbc",
+                      "borderWidth": 2
+                    }
+                  }
+                ],
+                "value": 1,
+                "itemStyle": {
+                  "color": "#bcbcbc",
+                  "borderWidth": 2
+                }
+              },
+              {
+                "name": "microsoft.identitymodel.protocols <b>7.3.1</b><br><br>License:<br><li>MIT</li>",
+                "children": [
+                  {
+                    "name": "microsoft.identitymodel.logging <b>7.3.1</b><br><br>License:<br><li>MIT</li>",
+                    "children": [
+                      {
+                        "name": "microsoft.identitymodel.abstractions <b>7.3.1</b><br><br>License:<br><li>MIT</li>",
+                        "children": [],
+                        "value": 1,
+                        "itemStyle": {
+                          "color": "#bcbcbc",
+                          "borderWidth": 2
+                        }
+                      }
+                    ],
+                    "value": 1,
+                    "itemStyle": {
+                      "color": "#bcbcbc",
+                      "borderWidth": 2
+                    }
+                  },
+                  {
+                    "name": "microsoft.identitymodel.tokens <b>7.3.1</b><br><br>License:<br><li>MIT</li>",
+                    "children": [],
+                    "value": 1,
+                    "itemStyle": {
+                      "color": "#bcbcbc",
+                      "borderWidth": 2
+                    }
+                  }
+                ],
+                "value": 2,
+                "itemStyle": {
+                  "color": "#bcbcbc",
+                  "borderWidth": 2
+                }
+              }
+            ],
+            "value": 3,
             "itemStyle": {
               "color": "#bcbcbc",
               "borderWidth": 2
@@ -1022,25 +1071,6 @@
     "name": "microsoft.fast.components.fluentui <b>3.5.5</b><br><br>License:<br><li>MIT</li>",
     "children": [
       {
-        "name": "microsoft.extensions.hosting.abstractions <b>7.0.0</b><br><br>License:<br><li>MIT</li>",
-        "children": [
-          {
-            "name": "microsoft.extensions.fileproviders.abstractions <b>7.0.0</b><br><br>License:<br><li>MIT</li>",
-            "children": [],
-            "value": 1,
-            "itemStyle": {
-              "color": "#bcbcbc",
-              "borderWidth": 2
-            }
-          }
-        ],
-        "value": 1,
-        "itemStyle": {
-          "color": "#bcbcbc",
-          "borderWidth": 2
-        }
-      },
-      {
         "name": "system.text.json <b>7.0.3</b><br><br>Vulnerabilities:<br><li>CVE-2024-30105 (High)</li><br>License:<br><li>MIT</li>",
         "children": [
           {
@@ -1058,6 +1088,25 @@
           "color": "#ff4633",
           "borderWidth": 2
         }
+      },
+      {
+        "name": "microsoft.extensions.hosting.abstractions <b>7.0.0</b><br><br>License:<br><li>MIT</li>",
+        "children": [
+          {
+            "name": "microsoft.extensions.fileproviders.abstractions <b>7.0.0</b><br><br>License:<br><li>MIT</li>",
+            "children": [],
+            "value": 1,
+            "itemStyle": {
+              "color": "#bcbcbc",
+              "borderWidth": 2
+            }
+          }
+        ],
+        "value": 1,
+        "itemStyle": {
+          "color": "#bcbcbc",
+          "borderWidth": 2
+        }
       }
     ],
     "value": 2,
@@ -1070,7 +1119,7 @@
     "name": "microsoft.extensions.http.polly <b>8.0.2</b><br><br>License:<br><li>MIT</li>",
     "children": [
       {
-        "name": "polly <b>7.2.4</b><br><br>License:<br><li>BSD-3-Clause</li>",
+        "name": "polly.extensions.http <b>3.0.0</b><br><br>License:<br><li>BSD-3-Clause</li>",
         "children": [],
         "value": 1,
         "itemStyle": {
@@ -1079,7 +1128,7 @@
         }
       },
       {
-        "name": "polly.extensions.http <b>3.0.0</b><br><br>License:<br><li>BSD-3-Clause</li>",
+        "name": "polly <b>7.2.4</b><br><br>License:<br><li>BSD-3-Clause</li>",
         "children": [],
         "value": 1,
         "itemStyle": {
@@ -1091,17 +1140,55 @@
         "name": "microsoft.extensions.http <b>8.0.0</b><br><br>License:<br><li>MIT</li>",
         "children": [
           {
-            "name": "microsoft.extensions.diagnostics <b>8.0.0</b><br><br>License:<br><li>MIT</li>",
+            "name": "microsoft.extensions.configuration.abstractions <b>8.0.0</b><br><br>License:<br><li>MIT</li>",
             "children": [
               {
-                "name": "microsoft.extensions.configuration <b>8.0.0</b><br><br>License:<br><li>MIT</li>",
+                "name": "microsoft.extensions.primitives <b>8.0.0</b><br><br>License:<br><li>MIT</li>",
                 "children": [],
                 "value": 1,
                 "itemStyle": {
                   "color": "#bcbcbc",
                   "borderWidth": 2
                 }
-              },
+              }
+            ],
+            "value": 1,
+            "itemStyle": {
+              "color": "#bcbcbc",
+              "borderWidth": 2
+            }
+          },
+          {
+            "name": "microsoft.extensions.dependencyinjection.abstractions <b>8.0.0</b><br><br>License:<br><li>MIT</li>",
+            "children": [],
+            "value": 1,
+            "itemStyle": {
+              "color": "#bcbcbc",
+              "borderWidth": 2
+            }
+          },
+          {
+            "name": "microsoft.extensions.logging <b>8.0.0</b><br><br>License:<br><li>MIT</li>",
+            "children": [
+              {
+                "name": "microsoft.extensions.dependencyinjection <b>8.0.0</b><br><br>License:<br><li>MIT</li>",
+                "children": [],
+                "value": 1,
+                "itemStyle": {
+                  "color": "#bcbcbc",
+                  "borderWidth": 2
+                }
+              }
+            ],
+            "value": 1,
+            "itemStyle": {
+              "color": "#bcbcbc",
+              "borderWidth": 2
+            }
+          },
+          {
+            "name": "microsoft.extensions.diagnostics <b>8.0.0</b><br><br>License:<br><li>MIT</li>",
+            "children": [
               {
                 "name": "microsoft.extensions.options.configurationextensions <b>8.0.0</b><br><br>License:<br><li>MIT</li>",
                 "children": [
@@ -1158,6 +1245,15 @@
                   "color": "#bcbcbc",
                   "borderWidth": 2
                 }
+              },
+              {
+                "name": "microsoft.extensions.configuration <b>8.0.0</b><br><br>License:<br><li>MIT</li>",
+                "children": [],
+                "value": 1,
+                "itemStyle": {
+                  "color": "#bcbcbc",
+                  "borderWidth": 2
+                }
               }
             ],
             "value": 4,
@@ -1171,53 +1267,6 @@
             "children": [
               {
                 "name": "microsoft.extensions.dependencyinjection.abstractions <b>8.0.0</b><br><br>License:<br><li>MIT</li>",
-                "children": [],
-                "value": 1,
-                "itemStyle": {
-                  "color": "#bcbcbc",
-                  "borderWidth": 2
-                }
-              }
-            ],
-            "value": 1,
-            "itemStyle": {
-              "color": "#bcbcbc",
-              "borderWidth": 2
-            }
-          },
-          {
-            "name": "microsoft.extensions.configuration.abstractions <b>8.0.0</b><br><br>License:<br><li>MIT</li>",
-            "children": [
-              {
-                "name": "microsoft.extensions.primitives <b>8.0.0</b><br><br>License:<br><li>MIT</li>",
-                "children": [],
-                "value": 1,
-                "itemStyle": {
-                  "color": "#bcbcbc",
-                  "borderWidth": 2
-                }
-              }
-            ],
-            "value": 1,
-            "itemStyle": {
-              "color": "#bcbcbc",
-              "borderWidth": 2
-            }
-          },
-          {
-            "name": "microsoft.extensions.dependencyinjection.abstractions <b>8.0.0</b><br><br>License:<br><li>MIT</li>",
-            "children": [],
-            "value": 1,
-            "itemStyle": {
-              "color": "#bcbcbc",
-              "borderWidth": 2
-            }
-          },
-          {
-            "name": "microsoft.extensions.logging <b>8.0.0</b><br><br>License:<br><li>MIT</li>",
-            "children": [
-              {
-                "name": "microsoft.extensions.dependencyinjection <b>8.0.0</b><br><br>License:<br><li>MIT</li>",
                 "children": [],
                 "value": 1,
                 "itemStyle": {
@@ -1259,20 +1308,29 @@
     "name": "fluxor.blazor.web.reduxdevtools <b>5.9.1</b><br><br>License:<br><li>MIT</li>",
     "children": [
       {
+        "name": "newtonsoft.json <b>13.0.1</b><br><br>License:<br><li>MIT</li>",
+        "children": [],
+        "value": 1,
+        "itemStyle": {
+          "color": "#bcbcbc",
+          "borderWidth": 2
+        }
+      },
+      {
         "name": "fluxor.blazor.web <b>5.9.1</b><br><br>License:<br><li>MIT</li>",
         "children": [
           {
+            "name": "fluxor <b>5.9.1</b><br><br>License:<br><li>MIT</li>",
+            "children": [],
+            "value": 1,
+            "itemStyle": {
+              "color": "#bcbcbc",
+              "borderWidth": 2
+            }
+          },
+          {
             "name": "microsoft.aspnetcore.components.web <b>7.0.0</b><br><br>License:<br><li>MIT</li>",
             "children": [
-              {
-                "name": "microsoft.extensions.dependencyinjection <b>7.0.0</b><br><br>License:<br><li>MIT</li>",
-                "children": [],
-                "value": 1,
-                "itemStyle": {
-                  "color": "#bcbcbc",
-                  "borderWidth": 2
-                }
-              },
               {
                 "name": "microsoft.aspnetcore.components.forms <b>7.0.0</b><br><br>License:<br><li>MIT</li>",
                 "children": [
@@ -1283,7 +1341,7 @@
                         "name": "microsoft.aspnetcore.authorization <b>7.0.0</b><br><br>License:<br><li>MIT</li>",
                         "children": [
                           {
-                            "name": "microsoft.aspnetcore.metadata <b>7.0.0</b><br><br>License:<br><li>MIT</li>",
+                            "name": "microsoft.extensions.options <b>7.0.0</b><br><br>License:<br><li>MIT</li>",
                             "children": [],
                             "value": 1,
                             "itemStyle": {
@@ -1292,7 +1350,7 @@
                             }
                           },
                           {
-                            "name": "microsoft.extensions.options <b>7.0.0</b><br><br>License:<br><li>MIT</li>",
+                            "name": "microsoft.aspnetcore.metadata <b>7.0.0</b><br><br>License:<br><li>MIT</li>",
                             "children": [],
                             "value": 1,
                             "itemStyle": {
@@ -1347,6 +1405,15 @@
                   "color": "#bcbcbc",
                   "borderWidth": 2
                 }
+              },
+              {
+                "name": "microsoft.extensions.dependencyinjection <b>7.0.0</b><br><br>License:<br><li>MIT</li>",
+                "children": [],
+                "value": 1,
+                "itemStyle": {
+                  "color": "#bcbcbc",
+                  "borderWidth": 2
+                }
               }
             ],
             "value": 6,
@@ -1354,29 +1421,11 @@
               "color": "#9fc5e8",
               "borderWidth": 2
             }
-          },
-          {
-            "name": "fluxor <b>5.9.1</b><br><br>License:<br><li>MIT</li>",
-            "children": [],
-            "value": 1,
-            "itemStyle": {
-              "color": "#bcbcbc",
-              "borderWidth": 2
-            }
           }
         ],
         "value": 7,
         "itemStyle": {
           "color": "#9fc5e8",
-          "borderWidth": 2
-        }
-      },
-      {
-        "name": "newtonsoft.json <b>13.0.1</b><br><br>License:<br><li>MIT</li>",
-        "children": [],
-        "value": 1,
-        "itemStyle": {
-          "color": "#bcbcbc",
           "borderWidth": 2
         }
       }
@@ -1410,19 +1459,19 @@
     "name": "antdesign <b>0.18.0</b><br><br>License:<br><li>MIT</li>",
     "children": [
       {
+        "name": "oneof <b>2.1.155</b><br><br>License:<br><li>Bouncy Castle License</li><li>MIT</li>",
+        "children": [],
+        "value": 1,
+        "itemStyle": {
+          "color": "#bcbcbc",
+          "borderWidth": 2
+        }
+      },
+      {
         "name": "microsoft.aspnetcore.components.web <b>8.0.0</b><br><br>License:<br><li>MIT</li>",
         "children": [
           {
             "name": "microsoft.extensions.dependencyinjection <b>8.0.0</b><br><br>License:<br><li>MIT</li>",
-            "children": [],
-            "value": 1,
-            "itemStyle": {
-              "color": "#bcbcbc",
-              "borderWidth": 2
-            }
-          },
-          {
-            "name": "microsoft.jsinterop <b>8.0.0</b><br><br>License:<br><li>MIT</li>",
             "children": [],
             "value": 1,
             "itemStyle": {
@@ -1440,32 +1489,23 @@
             }
           },
           {
+            "name": "microsoft.jsinterop <b>8.0.0</b><br><br>License:<br><li>MIT</li>",
+            "children": [],
+            "value": 1,
+            "itemStyle": {
+              "color": "#bcbcbc",
+              "borderWidth": 2
+            }
+          },
+          {
             "name": "microsoft.aspnetcore.components.forms <b>8.0.0</b><br><br>License:<br><li>MIT</li>",
             "children": [
               {
                 "name": "microsoft.aspnetcore.components <b>8.0.0</b><br><br>License:<br><li>MIT</li>",
                 "children": [
                   {
-                    "name": "microsoft.aspnetcore.components.analyzers <b>8.0.0</b><br><br>License:<br><li>MIT</li>",
-                    "children": [],
-                    "value": 1,
-                    "itemStyle": {
-                      "color": "#bcbcbc",
-                      "borderWidth": 2
-                    }
-                  },
-                  {
                     "name": "microsoft.aspnetcore.authorization <b>8.0.0</b><br><br>License:<br><li>MIT</li>",
                     "children": [
-                      {
-                        "name": "microsoft.aspnetcore.metadata <b>8.0.0</b><br><br>License:<br><li>MIT</li>",
-                        "children": [],
-                        "value": 1,
-                        "itemStyle": {
-                          "color": "#bcbcbc",
-                          "borderWidth": 2
-                        }
-                      },
                       {
                         "name": "microsoft.extensions.logging.abstractions <b>8.0.0</b><br><br>License:<br><li>MIT</li>",
                         "children": [
@@ -1479,6 +1519,15 @@
                             }
                           }
                         ],
+                        "value": 1,
+                        "itemStyle": {
+                          "color": "#bcbcbc",
+                          "borderWidth": 2
+                        }
+                      },
+                      {
+                        "name": "microsoft.aspnetcore.metadata <b>8.0.0</b><br><br>License:<br><li>MIT</li>",
+                        "children": [],
                         "value": 1,
                         "itemStyle": {
                           "color": "#bcbcbc",
@@ -1510,6 +1559,15 @@
                       "color": "#bcbcbc",
                       "borderWidth": 2
                     }
+                  },
+                  {
+                    "name": "microsoft.aspnetcore.components.analyzers <b>8.0.0</b><br><br>License:<br><li>MIT</li>",
+                    "children": [],
+                    "value": 1,
+                    "itemStyle": {
+                      "color": "#bcbcbc",
+                      "borderWidth": 2
+                    }
                   }
                 ],
                 "value": 4,
@@ -1527,15 +1585,6 @@
           }
         ],
         "value": 7,
-        "itemStyle": {
-          "color": "#bcbcbc",
-          "borderWidth": 2
-        }
-      },
-      {
-        "name": "oneof <b>2.1.155</b><br><br>License:<br><li>Bouncy Castle License</li><li>MIT</li>",
-        "children": [],
-        "value": 1,
         "itemStyle": {
           "color": "#bcbcbc",
           "borderWidth": 2
@@ -1715,8 +1764,7 @@
               { extend: 'copy', className: 'btn btn-dark mb-3 btn-sm' },
               { extend: 'csv', className: 'btn btn-secondary mb-3 btn-sm' },
               { extend: 'excel', className: 'btn btn-success mb-3 btn-sm' },
-              { extend: 'pdf', className: 'btn btn-danger mb-3 btn-sm' },
-              { extend: 'print', className: 'btn btn-info mb-3 btn-sm', 
+              { extend: 'print', className: 'btn btn-danger mb-3 btn-sm', 
                 customize: function (win) {
                     $(win.document.body).css('font-size', '10pt');
                     $(win.document.body).find('table').addClass('compact').css('font-size', 'inherit');
@@ -1759,8 +1807,7 @@
               { extend: 'copy', className: 'btn btn-dark mb-3 btn-sm' },
               { extend: 'csv', className: 'btn btn-secondary mb-3 btn-sm' },
               { extend: 'excel', className: 'btn btn-success mb-3 btn-sm' },
-              { extend: 'pdf', className: 'btn btn-danger mb-3 btn-sm' },
-              { extend: 'print', className: 'btn btn-info mb-3 btn-sm', 
+              { extend: 'print', className: 'btn btn-danger mb-3 btn-sm', 
                 customize: function (win) {
                     $(win.document.body).css('font-size', '10pt');
                     $(win.document.body).find('table').addClass('compact').css('font-size', 'inherit');
@@ -1785,6 +1832,49 @@
             orderCellsTop: true,
             "autoWidth": true
           });
+
+          let vulnerabilitiesTable = $('#vulnerabilities-table').DataTable({
+            "order": [[ 1, "asc" ]],
+            pageLength: 10,
+            dom: 'Blfrtip',
+            lengthMenu: [
+                [10, 25, 50, -1],
+                [10, 25, 50, 'All']
+            ],
+            buttons: [
+              { extend: 'copy', className: 'btn btn-dark mb-3 btn-sm' },
+              { extend: 'csv', className: 'btn btn-secondary mb-3 btn-sm' },
+              { extend: 'excel', className: 'btn btn-success mb-3 btn-sm' },
+              { extend: 'print', className: 'btn btn-danger mb-3 btn-sm', 
+                customize: function (win) {
+                    $(win.document.body).css('font-size', '10pt');
+                    $(win.document.body).find('table').addClass('compact').css('font-size', 'inherit');
+
+                    // Add landscape mode
+                    var css = '@page { size: landscape; }',
+                        head = win.document.head || win.document.getElementsByTagName('head')[0],
+                        style = win.document.createElement('style');
+
+                    style.type = 'text/css';
+                    style.media = 'print';
+
+                    if (style.styleSheet) {
+                        style.styleSheet.cssText = css;
+                    } else {
+                        style.appendChild(win.document.createTextNode(css));
+                    }
+                    head.appendChild(style);
+                }
+              }
+            ],
+            orderCellsTop: true,
+            "autoWidth": true
+          });
+
+        $('#vulnerabilities-table thead input').on('keyup change', function () {
+            let columnIndex = $(this).parent().index();
+            vulnerabilitiesTable.column(columnIndex).search(this.value).draw();
+        });
       </script>
       <br><br>
       <div id="footer">Sunshine - SBOM visualization tool by <a href="https://www.linkedin.com/in/lucacapacci/">Luca Capacci</a> | <a href="https://github.com/CycloneDX/Sunshine/">GitHub repository</a> | <a href="https://github.com/CycloneDX/Sunshine/blob/main/LICENSE">License</a></div>
