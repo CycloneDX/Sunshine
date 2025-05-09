@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sunshine - SBOM visualization tool</title>
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.27.5/full/pyodide.js"></script>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
@@ -174,10 +174,14 @@
     <h3 class="light-text">CycloneDX JSON file</h3>
     <div id="upload-file-container">Select a CycloneDX JSON file from your file system. All submitted data is processed locally within your browser, without being transmitted anywhere else.<input type="file" id="file-input" class="form-control" style="width: 50%;" accept=".json">
         <ul>
-            <li>If you do not have a CycloneDX JSON file available, but just want to see what output is produced by the tool <a href="https://CycloneDX.github.io/Sunshine/sample.html">see a sample HTML output here.</a></li>
+            <li>If you do not have a CycloneDX JSON file available, but just want to see what output is produced by the tool see a sample HTML output <a href="https://CycloneDX.github.io/Sunshine/sample_enriched.html">here with data enriched with EPSS and CISA KEV</a> or <a href="https://CycloneDX.github.io/Sunshine/sample.html">here without enriched data</a>.</li>
             <li>If your SBOM file is not in the CycloneDX JSON format, such as SPDX or CycloneDX XML, you can convert it using <a href="https://CycloneDX.github.io/cyclonedx-web-tool/convert">CycloneDX Web Tool.</a></li>
             <li>If you prefer using a standalone CLI version <a href="https://github.com/CycloneDX/Sunshine/">download it here.</a></li>
         </ul>
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" role="switch" id="enrich-check" checked>
+          <label class="form-check-label" for="enrich-check">Enrich data with EPSS and CISA KEV</label>
+        </div>
     </div>
 
     <br>
@@ -300,9 +304,8 @@
     <h3 class="light-text">Log</h3>
     <div id="output">Log will appear here...</div>
     <br><br>
-    <div id="footer">Sunshine - SBOM visualization tool by <a href="https://www.linkedin.com/in/lucacapacci/">Luca Capacci</a> | <a href="https://github.com/CycloneDX/Sunshine/">GitHub repository</a> | <a href="https://github.com/CycloneDX/Sunshine/blob/main/LICENSE">License</a></div>
+    <div id="footer">Sunshine - SBOM visualization tool | Made by <a href="https://www.linkedin.com/in/lucacapacci/">Luca Capacci</a> | Contributor <a href="https://www.linkedin.com/in/mattiafierro/">Mattia Fierro</a> | <a href="https://github.com/CycloneDX/Sunshine/">GitHub repository</a> | <a href="https://github.com/CycloneDX/Sunshine/blob/main/LICENSE">License</a></div>
     
-
     <script>
         function generateRandomString() {
             var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -390,6 +393,7 @@
             if (!pyodideInstance) {
                 writeToLog("Loading environment...");
                 pyodideInstance = await loadPyodide();
+                await pyodideInstance.loadPackage("requests");
                 writeToLog("Environment loaded!");
             }
         }
@@ -427,9 +431,27 @@
             handleShowComponentsSwitchChange(allComponents);
         }
 
+        var file = null;
+        var doEnrichment = true;
+        
         document.getElementById('file-input').addEventListener('change', handleFile);
         function handleFile(event) {
-            var file = event.target.files[0];
+            file = event.target.files[0];
+            parseFile();
+        }
+
+        const enrichCheck = document.getElementById('enrich-check');
+        enrichCheck.addEventListener('change', function() {
+            if (this.checked) {
+                doEnrichment = true;
+                parseFile();
+            } else {
+                doEnrichment = false;
+                parseFile();
+            }
+        });
+
+        function parseFile() {
             if (!file) return;
             hideDiv("chart-container");
             showDiv("chart-container-placeholder");
@@ -633,6 +655,7 @@
                 writeToLog("Executing...");
                 pyodideInstance.globals.set("__name__", "__web__");
                 pyodideInstance.globals.set("INPUT_DATA", data);
+                pyodideInstance.globals.set("DO_ENRICHMENT", doEnrichment);
 
                 var result = await pyodideInstance.runPythonAsync(pythonScript);
                 writeToLog("Execution complete!");

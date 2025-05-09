@@ -25,6 +25,11 @@ import argparse
 import os
 import html
 import copy
+import re
+import requests
+import csv
+from decimal import Decimal
+
 
 VERSION = "0.9"
 NAME = "Sunshine"
@@ -579,7 +584,7 @@ HTML_TEMPLATE = """
         });
       </script>
       <br><br>
-      <div id="footer">Sunshine - SBOM visualization tool by <a href="https://www.linkedin.com/in/lucacapacci/">Luca Capacci</a> | <a href="https://github.com/CycloneDX/Sunshine/">GitHub repository</a> | <a href="https://github.com/CycloneDX/Sunshine/blob/main/LICENSE">License</a></div>
+      <div id="footer">Sunshine - SBOM visualization tool | Made by <a href="https://www.linkedin.com/in/lucacapacci/">Luca Capacci</a> | Contributor <a href="https://www.linkedin.com/in/mattiafierro/">Mattia Fierro</a> | <a href="https://github.com/CycloneDX/Sunshine/">GitHub repository</a> | <a href="https://github.com/CycloneDX/Sunshine/blob/main/LICENSE">License</a></div>
     </body>
 </html>
 """
@@ -1399,14 +1404,135 @@ def build_components_table_content(components):
     return "".join(rows)
 
 
-def build_vulnerabilities_table_content(vulnerabilities, components):
-    rows = ["""<thead>
+def is_cve(string):
+    pattern = r'^CVE-\d{4}-\d{4,}$'
+    return bool(re.match(pattern, string))
+
+
+def extract_year_and_first_digit(cve_string):
+    pattern = r'^CVE-(\d{4})-(\d)(\d*)$'
+    match = re.match(pattern, cve_string)
+    if match:
+        year = match.group(1)
+        first_digit = match.group(2)
+        return year, first_digit
+    else:
+        return None, None
+
+
+def get_epss(cve, epss_cache):
+    cve = cve.upper().strip()
+
+    if not is_cve(cve):
+        return "-"
+
+    year, first_digit = extract_year_and_first_digit(cve)
+
+    cache_key = f"{year}-{first_digit}"
+
+    chunk_url = f"https://raw.githubusercontent.com/lucacapacci/epss/refs/heads/main/data_groups/epss_scores_{year}_{first_digit}.csv"
+
+    if cache_key in epss_cache:
+        epss_data = epss_cache[cache_key]
+    else:
+        custom_print(f"Getting EPSS data from {chunk_url}")
+        resp = requests.get(chunk_url)
+
+        if resp.status_code == 404:
+            epss_cache[cache_key] = None
+            return "-"
+
+        if resp.status_code != 200:
+            epss_cache[cache_key] = None
+            custom_print(f"Unexpected status code ({resp.status_code}) for URL {chunk_url}")
+            return "-"
+
+        epss_data = resp.text
+        epss_cache[cache_key] = epss_data
+
+    if epss_data is None:
+        return "-"
+
+    lines = epss_data.splitlines()
+
+    headers = []
+    for row in csv.reader(lines[1:]):
+        headers = row
+        break
+
+    for row in csv.reader(lines[2:]):
+        if row[headers.index('cve')].upper().strip() == cve:
+            decimal_number = Decimal(row[headers.index('epss')]).normalize()
+            return f"{decimal_number}"
+
+    return "-"
+
+
+def get_cisa_kev(cve, cisa_kev_cache):
+    cve = cve.upper().strip()
+
+    if not is_cve(cve):
+        return "-"
+
+    year, first_digit = extract_year_and_first_digit(cve)
+
+    cache_key = f"{year}-{first_digit}"
+
+    chunk_url = f"https://raw.githubusercontent.com/lucacapacci/cisa_kev/refs/heads/main/data_groups/cisa_kev_{year}_{first_digit}.csv"
+
+    if cache_key in cisa_kev_cache:
+        cisa_kev_data = cisa_kev_cache[cache_key]
+    else:
+        custom_print(f"Getting CISA KEV data from {chunk_url}")
+        resp = requests.get(chunk_url)
+
+        if resp.status_code == 404:
+            cisa_kev_cache[cache_key] = None
+            return "-"
+
+        if resp.status_code != 200:
+            cisa_kev_cache[cache_key] = None
+            custom_print(f"Unexpected status code ({resp.status_code}) for URL {chunk_url}")
+            return "-"
+
+        cisa_kev_data = resp.text
+        cisa_kev_cache[cache_key] = cisa_kev_data
+
+    if cisa_kev_data is None:
+        return "-"
+
+    lines = cisa_kev_data.splitlines()
+
+    headers = []
+    for row in csv.reader(lines):
+        headers = row
+        break
+
+    for row in csv.reader(lines[1:]):
+        if row[headers.index('cveID')].upper().strip() == cve:
+            return row[headers.index('dateAdded')]
+
+    return "-"
+
+
+def build_vulnerabilities_table_content(vulnerabilities, components, enrich_cves=False):
+    max_epss = "0.0"
+    kev_counter = 0
+
+    first_row = """<thead>
         <tr>
             <th>Vulnerability</th>
             <th>Severity</th>
             <th>Score</th>
             <th>Vector</th>
-            <th>Directly vulnerable <br>components</th>
+            """
+
+    if enrich_cves is True:
+        first_row += """<th>EPSS</th>
+            <th>CISA KEV Date</th>
+            """
+
+    first_row += """<th>Directly vulnerable <br>components</th>
             <th>Transitively vulnerable <br>components</th>
         </tr>
         <tr>
@@ -1414,11 +1540,23 @@ def build_vulnerabilities_table_content(vulnerabilities, components):
             <th><input type="text" placeholder="Search Severity" class="form-control search-in-table-vuln"></th>
             <th><input type="text" placeholder="Search Score" class="form-control search-in-table-vuln"></th>
             <th><input type="text" placeholder="Search Vector" class="form-control search-in-table-vuln"></th>
-            <th><input type="text" placeholder="Search Directly vulnerable components" class="form-control search-in-table-vuln"></th>
+            """
+
+    if enrich_cves is True:
+        first_row += """<th><input type="text" placeholder="Search EPSS" class="form-control search-in-table-vuln"></th>
+            <th><input type="text" placeholder="Search CISA KEV Date" class="form-control search-in-table-vuln"></th>
+            """
+
+    first_row += """<th><input type="text" placeholder="Search Directly vulnerable components" class="form-control search-in-table-vuln"></th>
             <th><input type="text" placeholder="Search Transitively vulnerable components" class="form-control search-in-table-vuln"></th>
         </tr>
-    </thead>"""]
+    </thead>"""
+
+    rows = [first_row]
     rows.append("<tbody>")
+
+    epss_cache = {}
+    cisa_kev_cache = {}
 
     for _, vulnerability in vulnerabilities.items():
         rows.append("<tr>")
@@ -1428,6 +1566,16 @@ def build_vulnerabilities_table_content(vulnerabilities, components):
         rows.append("<td>" + f'{html.escape(vulnerability["severity"].title())}' + "</td>")
         rows.append("<td>" + f'{vulnerability["score"]}' + "</td>")
         rows.append("<td>" + f'{html.escape(vulnerability["vector"])}' + "</td>")
+
+        if enrich_cves is True:
+            current_epss = get_epss(vulnerability["id"], epss_cache)
+            rows.append("<td>" + f'{html.escape(current_epss)}' + "</td>")
+            current_cisa_kev = get_cisa_kev(vulnerability["id"], cisa_kev_cache)
+            rows.append("<td>" + f'{html.escape(current_cisa_kev)}' + "</td>")
+            if current_epss > max_epss:
+                max_epss = current_epss
+            if current_cisa_kev != "-":
+                kev_counter += 1
 
         if len(vulnerability["directly_vulnerable_components"]) == 0:
             rows.append("<td>-</td>")
@@ -1453,10 +1601,10 @@ def build_vulnerabilities_table_content(vulnerabilities, components):
 
     rows.append("</tbody>")
 
-    return "".join(rows)
+    return "".join(rows), max_epss, kev_counter
 
 
-def build_metadata_table_content(metadata_info, counter_critical, counter_high, counter_medium, counter_low, counter_info, components):
+def build_metadata_table_content(metadata_info, counter_critical, counter_high, counter_medium, counter_low, counter_info, components, enrich_cves, max_epss, kev_counter):
     rows = []
 
     # headers
@@ -1477,25 +1625,29 @@ def build_metadata_table_content(metadata_info, counter_critical, counter_high, 
 
     vulnerabilities_td = ""
     if counter_critical > 0:
-        vulnerabilities_td += f'<span class="badge bg-dark-red">{counter_critical}</span>&nbsp;'
+        vulnerabilities_td += f'<span style="display: none;">Critical: </span><span class="badge bg-dark-red">{counter_critical}</span><span style="display: none;">, </span>&nbsp;'
     else:
-        vulnerabilities_td += f'<span class="badge bg-dark-red opaque">{counter_critical}</span>&nbsp;'
+        vulnerabilities_td += f'<span style="display: none;">Critical: </span><span class="badge bg-dark-red opaque">{counter_critical}</span><span style="display: none;">, </span>&nbsp;'
     if counter_high > 0:
-        vulnerabilities_td += f'<span class="badge bg-danger">{counter_high}</span>&nbsp;'
+        vulnerabilities_td += f'<span style="display: none;">High: </span><span class="badge bg-danger">{counter_high}</span><span style="display: none;">, </span>&nbsp;'
     else:
-        vulnerabilities_td += f'<span class="badge bg-danger opaque">{counter_high}</span>&nbsp;'
+        vulnerabilities_td += f'<span style="display: none;">High: </span><span class="badge bg-danger opaque">{counter_high}</span><span style="display: none;">, </span>&nbsp;'
     if counter_medium > 0:
-        vulnerabilities_td += f'<span class="badge bg-orange">{counter_medium}</span>&nbsp;'
+        vulnerabilities_td += f'<span style="display: none;">Medium: </span><span class="badge bg-orange">{counter_medium}</span><span style="display: none;">, </span>&nbsp;'
     else:
-        vulnerabilities_td += f'<span class="badge bg-orange opaque">{counter_medium}</span>&nbsp;'
+        vulnerabilities_td += f'<span style="display: none;">Medium: </span><span class="badge bg-orange opaque">{counter_medium}</span><span style="display: none;">, </span>&nbsp;'
     if counter_low > 0:
-        vulnerabilities_td += f'<span class="badge bg-yellow">{counter_low}</span>&nbsp;'
+        vulnerabilities_td += f'<span style="display: none;">Low: </span><span class="badge bg-yellow">{counter_low}</span><span style="display: none;">, </span>&nbsp;'
     else:
-        vulnerabilities_td += f'<span class="badge bg-yellow opaque">{counter_low}</span>&nbsp;'
+        vulnerabilities_td += f'<span style="display: none;">Low: </span><span class="badge bg-yellow opaque">{counter_low}</span><span style="display: none;">, </span>&nbsp;'
     if counter_info > 0:
-        vulnerabilities_td += f'<span class="badge bg-success">{counter_info}</span>&nbsp;'
+        vulnerabilities_td += f'<span style="display: none;">Information: </span><span class="badge bg-success">{counter_info}</span>'
     else:
-        vulnerabilities_td += f'<span class="badge bg-success opaque">{counter_info}</span>&nbsp;'
+        vulnerabilities_td += f'<span style="display: none;">Information: </span><span class="badge bg-success opaque">{counter_info}</span>'
+
+    if enrich_cves is True:
+        vulnerabilities_td += f'<span style="display: none;">, </span><hr><i>Max EPSS</i>&nbsp;&#x2192;&nbsp;{html.escape(max_epss)}<span style="display: none;">, </span><br>'
+        vulnerabilities_td += f'<i>Vulnerabilities in CISA KEV</i>&nbsp;&#x2192;&nbsp;{kev_counter}'
 
     rows.append(f"<td>{vulnerabilities_td}</td>")
 
@@ -1620,7 +1772,7 @@ def parse_vulnerabilities(components):
     return vulnerabilities, counter_critical, counter_high, counter_medium, counter_low, counter_info
 
 
-def main_cli(input_file_path, output_file_path):
+def main_cli(input_file_path, output_file_path, enrich_cves):
     if not os.path.exists(input_file_path):
         custom_print(f"File does not exist: '{input_file_path}'")
         exit()
@@ -1643,8 +1795,8 @@ def main_cli(input_file_path, output_file_path):
     double_check_if_all_components_were_taken_into_account(vulnerable_components, echart_data_vulnerable_components)
 
     components_table_content = build_components_table_content(components)
-    metadata_table_content = build_metadata_table_content(metadata_info, counter_critical, counter_high, counter_medium, counter_low, counter_info, components)
-    vulnerabilities_table_content = build_vulnerabilities_table_content(vulnerabilities, components)
+    vulnerabilities_table_content, max_epss, kev_counter = build_vulnerabilities_table_content(vulnerabilities, components, enrich_cves)
+    metadata_table_content = build_metadata_table_content(metadata_info, counter_critical, counter_high, counter_medium, counter_low, counter_info, components, enrich_cves, max_epss, kev_counter)
     
     html_content = HTML_TEMPLATE.replace("<CHART_DATA_HERE>", json.dumps(echart_data_all_components, indent=2))
     html_content = html_content.replace("<CHART_DATA_VULN_HERE>", json.dumps(echart_data_vulnerable_components, indent=2))
@@ -1657,7 +1809,7 @@ def main_cli(input_file_path, output_file_path):
     custom_print("Done.")
 
 
-def main_web(input_string):
+def main_web(input_string, enrich_cves):
     try:
         components, metadata_info = parse_string(input_string)
     except Exception as e:
@@ -1678,9 +1830,8 @@ def main_web(input_string):
     echart_data_vulnerable_components = json.dumps(echart_data_vulnerable_components, indent=2)
 
     components_table_content = build_components_table_content(components)
-    metadata_table_content = build_metadata_table_content(metadata_info, counter_critical, counter_high, counter_medium, counter_low, counter_info, components)
-
-    vulnerabilities_table_content = build_vulnerabilities_table_content(vulnerabilities, components)
+    vulnerabilities_table_content, max_epss, kev_counter = build_vulnerabilities_table_content(vulnerabilities, components, enrich_cves)
+    metadata_table_content = build_metadata_table_content(metadata_info, counter_critical, counter_high, counter_medium, counter_low, counter_info, components, enrich_cves, max_epss, kev_counter)
     
     return echart_data_all_components, echart_data_vulnerable_components, components_table_content, metadata_table_content, vulnerabilities_table_content
 
@@ -1697,6 +1848,7 @@ if __name__ == "__main__":
     parser.add_argument("-v", "--version", help="show program version", action="store_true")
     parser.add_argument("-i", "--input", help="path of input CycloneDX file")
     parser.add_argument("-o", "--output", help="path of output HTML file")
+    parser.add_argument("-e", "--enrich", help="enrich CVEs with EPSS and CISA KEV", action="store_true")
     args = parser.parse_args()
 
     if args.version:
@@ -1708,11 +1860,16 @@ if __name__ == "__main__":
 
     input_file_path = args.input
     output_file_path = args.output
-    main_cli(input_file_path, output_file_path)
+
+    enrich_cves = False
+    if args.enrich:
+        enrich_cves = True
+
+    main_cli(input_file_path, output_file_path, enrich_cves)
 
 
 if __name__ == "__web__":
-    echart_data_all_components, echart_data_vulnerable_components, components_table_content, metadata_table_content, vulnerabilities_table_content = main_web(INPUT_DATA)
+    echart_data_all_components, echart_data_vulnerable_components, components_table_content, metadata_table_content, vulnerabilities_table_content = main_web(INPUT_DATA, DO_ENRICHMENT)
     OUTPUT_CHART_DATA = echart_data_all_components
     OUTPUT_CHART_DATA_VULNERABLE_COMPONENTS = echart_data_vulnerable_components
     OUTPUT_COMPONENTS_TABLE_DATA = components_table_content

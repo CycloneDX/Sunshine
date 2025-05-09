@@ -7,7 +7,7 @@
   
 Sunshine: actionable CycloneDX visualization tool. 
 <br><br>
-It takes a JSON CycloneDX file as input and provides as output an HTML containing a chart and a table representation of the components, dependencies, vulnerabilities and licenses. [See a sample HTML output here.](https://cyclonedx.github.io/Sunshine/sample.html)
+It takes a JSON CycloneDX file as input and provides as output an HTML containing a chart and table representation of the components, dependencies, vulnerabilities and licenses. It can also enrich data by adding EPSS and CISA KEV information. See a sample HTML output [here without enriched data](https://cyclonedx.github.io/Sunshine/sample.html) and [here with enriched data](https://cyclonedx.github.io/Sunshine/sample_enriched.html).
 
 <br>
 
@@ -24,6 +24,8 @@ Usage of the web application:
 Usage of the CLI version:
 
 ```
+pip3 install -r requirements.txt
+
 sunshine.py [-h] [-v] [-i INPUT] [-o OUTPUT]
 
 options:
