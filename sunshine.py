@@ -1430,7 +1430,7 @@ def get_epss(cve, epss_cache):
 
     cache_key = f"{year}-{first_digit}"
 
-    chunk_url = f"https://raw.githubusercontent.com/lucacapacci/epss/refs/heads/main/data_groups/epss_scores_{year}_{first_digit}.csv"
+    chunk_url = f"https://lucacapacci.github.io/epss/data_groups/epss_scores_{year}_{first_digit}.csv"
 
     if cache_key in epss_cache:
         epss_data = epss_cache[cache_key]
@@ -1478,7 +1478,7 @@ def get_cisa_kev(cve, cisa_kev_cache):
 
     cache_key = f"{year}-{first_digit}"
 
-    chunk_url = f"https://raw.githubusercontent.com/lucacapacci/cisa_kev/refs/heads/main/data_groups/cisa_kev_{year}_{first_digit}.csv"
+    chunk_url = f"https://lucacapacci.github.io/cisa_kev/data_groups/cisa_kev_{year}_{first_digit}.csv"
 
     if cache_key in cisa_kev_cache:
         cisa_kev_data = cisa_kev_cache[cache_key]
