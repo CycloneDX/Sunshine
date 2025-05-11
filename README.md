@@ -33,6 +33,7 @@ options:
   -v, --version        show program version
   -i, --input INPUT    path of input CycloneDX file
   -o, --output OUTPUT  path of output HTML file
+  -e, --enrich         enrich CVEs with EPSS and CISA KEV
 ```
 
 <br>
