@@ -648,36 +648,76 @@ def get_severity_by_score(score):
         return "information"
 
 
+def get_preferred_vuln_source(source_1, source_2):
+    source_1 = source_1.upper()
+    source_2 = source_2.upper()
+
+    if source_1 == "NVD":
+        source_1_order = 0
+    elif source_1 in ["-", "EPSS"]:
+        source_1_order = 2
+    else:
+        source_1_order = 1
+
+    if source_2 == "NVD":
+        source_2_order = 0
+    elif source_2 in ["-", "EPSS"]:
+        source_2_order = 2
+    else:
+        source_2_order = 1
+
+    if source_1_order < source_2_order:
+        return source_1
+    else:
+        return source_2
+
+
 def parse_vulnerability_data(vulnerability):
     vuln_id = vulnerability["id"]
 
     vuln_severity = None
     vuln_score = 0.0
     vuln_vector = "-"
+    vuln_source = "-"
+    found_at_least_one = False
     if "ratings" in vulnerability:
-        for rating in vulnerability["ratings"]:
-            if "method" not in rating:
-                continue
-            for preferred_rating_method in PREFERRED_VULNERABILITY_RATING_METHODS_ORDER:
+        for preferred_rating_method in PREFERRED_VULNERABILITY_RATING_METHODS_ORDER:
+            if found_at_least_one is True:
+                break
+            for rating in vulnerability["ratings"]:
+                if "method" not in rating:
+                    continue
                 if rating["method"] == preferred_rating_method:
-                    if "severity" in rating:
-                        rating_vuln_severity = rating["severity"]
-                        if rating_vuln_severity.lower() in VALID_SEVERITIES:
-                            if rating_vuln_severity.lower() == "info":
-                                rating_vuln_severity = "information"
-                            vuln_severity = rating_vuln_severity.lower()
-                            if "score" in rating:
-                                vuln_score = float(rating["score"])
-                            if "vector" in rating:
-                                vuln_vector = rating["vector"]
-                            break
-                    if "score" in rating:
-                        vuln_severity = get_severity_by_score(rating["score"])
-                        vuln_score = float(rating["score"])
+                    found_at_least_one = True
+                    current_vuln_score = 0.0
+                    current_vuln_vector = "-"
+                    current_vuln_source = "-"
+                    if "severity" in rating and rating["severity"].lower() in VALID_SEVERITIES:
+                        current_vuln_severity = rating["severity"]
+                        if current_vuln_severity.lower() == "info":
+                            current_vuln_severity = "information"
+                        current_vuln_severity = current_vuln_severity.lower()
+                        if "score" in rating:
+                            current_vuln_score = float(rating["score"])
                         if "vector" in rating:
-                            vuln_vector = rating["vector"]
-                        break
-
+                            current_vuln_vector = rating["vector"]
+                        if "source" in rating:
+                            if "name" in rating["source"]:
+                                current_vuln_source =  rating["source"]["name"]
+                    elif "score" in rating:
+                        current_vuln_severity = get_severity_by_score(rating["score"])
+                        current_vuln_score = float(rating["score"])
+                        if "vector" in rating:
+                            current_vuln_vector = rating["vector"]
+                        if "source" in rating:
+                            if "name" in rating["source"]:
+                                current_vuln_source =  rating["source"]["name"]
+                    
+                    if get_preferred_vuln_source(vuln_source, current_vuln_source) == current_vuln_source:
+                        vuln_severity = current_vuln_severity
+                        vuln_score = current_vuln_score
+                        vuln_vector = current_vuln_vector
+                        vuln_source = current_vuln_source
 
     if vuln_severity is None:
         if "ratings" not in vulnerability:
@@ -708,6 +748,7 @@ def parse_vulnerability_data(vulnerability):
         custom_print(f"WARNING: could not detect severity of vulnerability with id '{vulnerability['id']}'. I'll set a default 'INFORMATION' severity...")
         vuln_severity = get_severity_by_score(0)
 
+    print(f"{vuln_source=}")
     return vuln_id, vuln_severity, vuln_score, vuln_vector
 
 
@@ -978,6 +1019,22 @@ def parse_metadata(data):
                     metadata_info[info_id]["Name"] = tool["name"]
                 if "version" in tool:
                     metadata_info[info_id]["Version"] = tool["version"]
+                if "services" in tool:
+                    counter_services = 0
+                    services = metadata_field["tools"]["services"]
+                    
+                    for service in services:
+                        counter_services += 1
+                        field_id = "Service"
+                        if len(services) > 1:
+                            field_id = f"Service #{counter_services}"
+
+                        if "vendor" in service:
+                            metadata_info[info_id][f"{field_id} Vendor"] = service["vendor"]
+                        if "name" in service:
+                            metadata_info[info_id][f"{field_id} Name"] = service["name"]
+                        if "version" in service:
+                            metadata_info[info_id][f"{field_id} Version"] = service["version"]
 
     return metadata_info
 
