@@ -712,8 +712,8 @@ def parse_vulnerability_data(vulnerability):
                         if "source" in rating:
                             if "name" in rating["source"]:
                                 current_vuln_source =  rating["source"]["name"]
-                    
-                    if get_preferred_vuln_source(vuln_source, current_vuln_source) == current_vuln_source:
+
+                    if get_preferred_vuln_source(vuln_source, current_vuln_source) == current_vuln_source.upper():
                         vuln_severity = current_vuln_severity
                         vuln_score = current_vuln_score
                         vuln_vector = current_vuln_vector
@@ -748,7 +748,6 @@ def parse_vulnerability_data(vulnerability):
         custom_print(f"WARNING: could not detect severity of vulnerability with id '{vulnerability['id']}'. I'll set a default 'INFORMATION' severity...")
         vuln_severity = get_severity_by_score(0)
 
-    print(f"{vuln_source=}")
     return vuln_id, vuln_severity, vuln_score, vuln_vector
 
 
@@ -1019,22 +1018,48 @@ def parse_metadata(data):
                     metadata_info[info_id]["Name"] = tool["name"]
                 if "version" in tool:
                     metadata_info[info_id]["Version"] = tool["version"]
-                if "services" in tool:
-                    counter_services = 0
-                    services = metadata_field["tools"]["services"]
-                    
-                    for service in services:
-                        counter_services += 1
-                        field_id = "Service"
-                        if len(services) > 1:
-                            field_id = f"Service #{counter_services}"
 
-                        if "vendor" in service:
-                            metadata_info[info_id][f"{field_id} Vendor"] = service["vendor"]
-                        if "name" in service:
-                            metadata_info[info_id][f"{field_id} Name"] = service["name"]
-                        if "version" in service:
-                            metadata_info[info_id][f"{field_id} Version"] = service["version"]
+            if "services" in metadata_field["tools"]:
+                counter_services = 0
+                services = metadata_field["tools"]["services"]
+                
+                for service in services:
+                    counter_services += 1
+                    field_id = "Service"
+                    if len(services) > 1:
+                        field_id = f"Service #{counter_services}"
+
+                    if "type" in service:
+                        metadata_info[info_id][f"{field_id} Type"] = service["type"]
+                    if "group" in service:
+                        metadata_info[info_id][f"{field_id} Group"] = service["group"]
+                    if "vendor" in service:
+                        metadata_info[info_id][f"{field_id} Vendor"] = service["vendor"]
+                    if "name" in service:
+                        metadata_info[info_id][f"{field_id} Name"] = service["name"]
+                    if "version" in service:
+                        metadata_info[info_id][f"{field_id} Version"] = service["version"]
+
+            if "components" in metadata_field["tools"]:
+                counter_tool_components = 0
+                tool_components = metadata_field["tools"]["components"]
+                
+                for tool_component in tool_components:
+                    counter_tool_components += 1
+                    field_id = "Component"
+                    if len(tool_components) > 1:
+                        field_id = f"Component #{counter_tool_components}"
+
+                    if "type" in tool_component:
+                        metadata_info[info_id][f"{field_id} Type"] = tool_component["type"]
+                    if "group" in tool_component:
+                        metadata_info[info_id][f"{field_id} Group"] = tool_component["group"]
+                    if "vendor" in tool_component:
+                        metadata_info[info_id][f"{field_id} Vendor"] = tool_component["vendor"]
+                    if "name" in tool_component:
+                        metadata_info[info_id][f"{field_id} Name"] = tool_component["name"]
+                    if "version" in tool_component:
+                        metadata_info[info_id][f"{field_id} Version"] = tool_component["version"]
 
     return metadata_info
 
