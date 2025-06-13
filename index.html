@@ -219,13 +219,13 @@
         <li><b>Clicking:</b> refocuses the chart. The clicked segment becomes the center (second innermost circle), showing only that component and its dependencies. In this view, the innermost circle is always blue. Clicking the blue circle navigates back up one level in the dependency hierarchy.</li>
     </ul>
     <hr>
-    <div class="form-check">
+    <div class="form-check" id="sunburst-selector-all">
       <input class="form-check-input" type="radio" name="showComponentsSwitch" id="allComponents" value="allComponents" checked onchange="handleShowComponentsSwitchChange(this)">
       <label class="form-check-label" for="allComponents">
         Show all components
       </label>
     </div>
-    <div class="form-check">
+    <div class="form-check" id="sunburst-selector-vulnerable">
       <input class="form-check-input" type="radio" name="showComponentsSwitch" id="vulnerableComponents" value="vulnerableComponents" onchange="handleShowComponentsSwitchChange(this)">
       <label class="form-check-label" for="vulnerableComponents">
         Show only components with direct or transitive vulnerabilities
@@ -350,9 +350,11 @@
             }
         }
 
+        var myChart;
+
         function renderChart(data, chartId) {
             var dom = document.getElementById(chartId);
-            var myChart = echarts.init(dom, null, {
+            myChart = echarts.init(dom, null, {
               renderer: 'canvas',
               useDirtyRect: false
             });
@@ -635,6 +637,53 @@
             }
         }
 
+        function countSegments(node) {
+          let count = 1;
+          if (node.children) {
+            node.children.forEach(child => {
+              count += countSegments(child);
+            });
+          }
+          return count;
+        }
+
+
+        function turnChartIntoImageIfTooManySegments(chartContainerId) {
+            var chartContainerInnerDiv = document.getElementById(chartContainerId);
+            var echartsInstance = echarts.getInstanceByDom(chartContainerInnerDiv);
+            var echartsInstanceData = echartsInstance.getOption().series[0].data;
+            let totalSegments = echartsInstanceData.reduce((sum, node) => sum + countSegments(node), 0);
+
+            if (totalSegments > 10000) {
+                var chartContainerInnerDivOnlyVuln = document.getElementById("chart-container-only-vulnerable-inner");
+                echarts.getInstanceByDom(chartContainerInnerDivOnlyVuln).dispose();
+                chartContainerInnerDivOnlyVuln.remove();
+
+                document.getElementById("sunburst-selector-all").innerHTML = '<div class="alert alert-warning" role="alert">WARNING: the chart is not displayed in interactive mode because there are too many dependency relationships. You can still explore components and relationships in components table.</div>';
+                document.getElementById("sunburst-selector-vulnerable").remove();
+
+                chartContainerInnerDiv.style.display = "block";
+                echartsInstance.resize();
+
+                var imgData = echartsInstance.getDataURL({
+                  type: 'png',
+                  pixelRatio: 2, // Adjust as needed for resolution
+                  backgroundColor: '#fff' // Optional: set background color
+                });
+                echartsInstance.dispose();
+                
+                var img = document.createElement('img');
+                img.src = imgData;
+                img.style.width = '100%';
+                img.style.height = 'auto';
+
+                chartContainerInnerDiv.innerHTML = '';
+                chartContainerInnerDiv.appendChild(img);
+                chartContainerInnerDiv.style.height = 'auto';                
+            }
+        }
+
+
         async function loadAndRunScript(data, fromPermalink) {
             await loadPyodideAndRun();
 
@@ -688,6 +737,8 @@
                     writeToLog("Building permalink...");
                     await compressAndEncode(data);
                 }*/
+                turnChartIntoImageIfTooManySegments("chart-container-inner");
+
                 writeToLog("Finished.");
             }
         }

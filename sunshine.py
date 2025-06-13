@@ -283,13 +283,13 @@ HTML_TEMPLATE = """
         <li><b>Clicking:</b> refocuses the chart. The clicked segment becomes the center (second innermost circle), showing only that component and its dependencies. In this view, the innermost circle is always blue. Clicking the blue circle navigates back up one level in the dependency hierarchy.</li>
     </ul>
     <hr>
-    <div class="form-check">
+    <div class="form-check" id="sunburst-selector-all">
       <input class="form-check-input" type="radio" name="showComponentsSwitch" id="allComponents" value="allComponents" checked onchange="handleShowComponentsSwitchChange(this)">
       <label class="form-check-label" for="allComponents">
         Show all components
       </label>
     </div>
-    <div class="form-check">
+    <div class="form-check" id="sunburst-selector-vulnerable">
       <input class="form-check-input" type="radio" name="showComponentsSwitch" id="vulnerableComponents" value="vulnerableComponents" onchange="handleShowComponentsSwitchChange(this)">
       <label class="form-check-label" for="vulnerableComponents">
         Show only components with direct or transitive vulnerabilities
@@ -582,6 +582,57 @@ HTML_TEMPLATE = """
             let columnIndex = $(this).parent().index();
             vulnerabilitiesTable.column(columnIndex).search(this.value).draw();
         });
+
+        function countSegments(node) {
+          let count = 1;
+          if (node.children) {
+            node.children.forEach(child => {
+              count += countSegments(child);
+            });
+          }
+          return count;
+        }
+
+
+        function turnChartIntoImageIfTooManySegments(chartContainerId) {
+            var chartContainerInnerDiv = document.getElementById(chartContainerId);
+            var echartsInstance = echarts.getInstanceByDom(chartContainerInnerDiv);
+            var echartsInstanceData = echartsInstance.getOption().series[0].data;
+            let totalSegments = echartsInstanceData.reduce((sum, node) => sum + countSegments(node), 0);
+
+            if (totalSegments > 10000) {
+                var chartContainerInnerDivOnlyVuln = document.getElementById("chart-container-only-vulnerable-inner");
+                echarts.getInstanceByDom(chartContainerInnerDivOnlyVuln).dispose();
+                chartContainerInnerDivOnlyVuln.remove();
+
+                document.getElementById("sunburst-selector-all").innerHTML = '<div class="alert alert-warning" role="alert">WARNING: the chart is not displayed in interactive mode because there are too many dependency relationships. You can still explore components and relationships in the components table.</div>';
+                document.getElementById("sunburst-selector-vulnerable").remove();
+
+                chartContainerInnerDiv.style.display = "block";
+                echartsInstance.resize();
+
+                var imgData = echartsInstance.getDataURL({
+                  type: 'png',
+                  pixelRatio: 2, // Adjust as needed for resolution
+                  backgroundColor: '#fff' // Optional: set background color
+                });
+
+                echartsInstance.dispose();
+                
+                var img = document.createElement('img');
+                img.src = imgData;
+                img.style.width = '100%';
+                img.style.height = 'auto';
+
+                chartContainerInnerDiv.innerHTML = '';
+                chartContainerInnerDiv.appendChild(img);
+                chartContainerInnerDiv.style.height = 'auto';
+            }
+        }
+
+        turnChartIntoImageIfTooManySegments("chart-container-inner");
+
+
       </script>
       <br><br>
       <div id="footer">Sunshine - SBOM visualization tool | Made by <a href="https://www.linkedin.com/in/lucacapacci/">Luca Capacci</a> | Contributor <a href="https://www.linkedin.com/in/mattiafierro/">Mattia Fierro</a> | <a href="https://github.com/CycloneDX/Sunshine/">GitHub repository</a> | <a href="https://github.com/CycloneDX/Sunshine/blob/main/LICENSE">License</a></div>
@@ -1854,6 +1905,36 @@ def parse_vulnerabilities(components):
     return vulnerabilities, counter_critical, counter_high, counter_medium, counter_low, counter_info
 
 
+def purge_components(components):
+    already_seen = {}
+    doubles = {}
+    # 1) passes them all and keeps track of duplicate bom-refs with respect to the group-name-version pair; each time it finds a duplicate it also saves the unique bom-ref that will survive
+    for bom_ref, component in components.items():
+        current_id = component["name"] if "name" in component else "-"
+        current_id += "--"
+        current_id += component["version"] if "version" in component else "-"
+        current_id += "--"
+        current_id += component["group"] if "group" in component else "-"
+        if current_id in already_seen:
+            doubles[bom_ref] = already_seen[current_id]
+        else:
+            already_seen[current_id] = bom_ref
+
+    # 2) deletes from "components" entries with duplicate bom-refs
+    for double_bom_ref in doubles:
+        del components[double_bom_ref]
+
+    # 3) passes all remaining "components" again and in all "dependency_of" and "depends_on" fields replaces the old bom-refs with the new ones (keeping only one copy, if the new one was already present)
+    for double_bom_ref, original_bom_ref in doubles.items():
+        for _, component in components.items():
+            if double_bom_ref in component["dependency_of"]:
+                component["dependency_of"].remove(double_bom_ref)
+                component["dependency_of"].add(original_bom_ref)
+            if double_bom_ref in component["depends_on"]:
+                component["depends_on"].remove(double_bom_ref)
+                component["depends_on"].add(original_bom_ref)
+
+
 def main_cli(input_file_path, output_file_path, enrich_cves):
     if not os.path.exists(input_file_path):
         custom_print(f"File does not exist: '{input_file_path}'")
@@ -1864,6 +1945,8 @@ def main_cli(input_file_path, output_file_path, enrich_cves):
     except Exception as e:
         custom_print(f"Error parsing input file: {e}")
         exit()
+
+    purge_components(components)
 
     # chart with all components
     echart_data_all_components = build_echarts_data(components)
@@ -1897,6 +1980,8 @@ def main_web(input_string, enrich_cves):
     except Exception as e:
         custom_print(f"Error parsing input string: {e}")
         exit()
+
+    purge_components(components)
 
     # chart with all components
     echart_data_all_components = build_echarts_data(components)
