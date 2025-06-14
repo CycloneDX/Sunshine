@@ -239,12 +239,50 @@ HTML_TEMPLATE = """
                 background-image: none !important;
             }
         }
+
+        .loading-overlay {
+          position: fixed;
+          width: 100%;
+          height: 100vh;
+          background: #032c57;
+          top: 0;
+          left: 0;
+          z-index: 1000;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          color: #baccde;
+          text-transform: uppercase;
+          letter-spacing: 0.3rem;
+          font-weight: bold;
+        }
+
+        .spinner {
+          border: 4px solid #baccde;
+          border-top: 4px solid #3498db;
+          border-radius: 50%;
+          width: 40px;
+          height: 40px;
+          animation: spin 2s linear infinite;
+          margin-bottom: 10px;
+        }
+
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
     
     </style>
 </head>
 
 
 <body>
+    <div id="loadingOverlay" class="loading-overlay">
+      <div class="spinner"></div>
+      <div class="loading-text">Loading Sunshine SBOM...</div>
+    </div>
+
     <h1 class="light-text">Sunshine - SBOM visualization tool</h1>
     <br>
     <div id="upload-file-container">
@@ -353,6 +391,15 @@ HTML_TEMPLATE = """
                 <table id="vulnerabilities-table" class="table table-striped table-bordered" style="width:100%"><VULNERABILITIES_TABLE_HERE></table>
     </div>
     <script type="text/javascript">
+        window.addEventListener('load', function() {
+          const loadingOverlay = document.getElementById('loadingOverlay');
+          loadingOverlay.style.opacity = '0';
+          loadingOverlay.style.transition = 'opacity 0.5s ease';
+          setTimeout(() => {
+            loadingOverlay.style.display = 'none';
+          }, 500);
+        });
+
         function showDiv(divId) {
             var div = document.getElementById(divId);
             if (div.style.display === "none") {
