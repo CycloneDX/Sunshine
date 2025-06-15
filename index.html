@@ -346,7 +346,10 @@
                 document.getElementById("output").textContent = "[" + formattedDate + "] " + text;
             }
             else {
-                document.getElementById("output").textContent += "\n" + "[" + formattedDate + "] " + text;
+                var newSpan = document.createElement("span");
+                newSpan.textContent = "\n" + "[" + formattedDate + "] " + text;
+                var outputDiv = document.getElementById("output");
+                outputDiv.appendChild(newSpan);
             }
         }
 

@@ -29,6 +29,8 @@ import re
 import requests
 import csv
 from decimal import Decimal
+if __name__ == "__web__":
+    from js import writeToLog
 
 
 VERSION = "0.9"
@@ -73,6 +75,9 @@ STYLES = {"critical": CRITICAL_STYLE,
           "low": LOW_STYLE,
           "information": INFORMATION_STYLE,
           "clean": BASIC_STYLE}
+
+
+REMAINING_WEB_LOGS = 200
 
 
 HTML_TEMPLATE = """
@@ -690,8 +695,12 @@ HTML_TEMPLATE = """
 
 def custom_print(text):
     if __name__ == "__web__":
-        from js import writeToLog
-        writeToLog(text)
+        global REMAINING_WEB_LOGS
+        if REMAINING_WEB_LOGS > 0:
+            REMAINING_WEB_LOGS -= 1
+            writeToLog(text)
+            if REMAINING_WEB_LOGS == 0:
+                writeToLog("WARNING: Messages were truncated because there are too many to be displayed here, use the CLI version to view all the messages")
     else:
         print(text)
 
