@@ -219,6 +219,7 @@
         <li><b>Clicking:</b> refocuses the chart. The clicked segment becomes the center (second innermost circle), showing only that component and its dependencies. In this view, the innermost circle is always blue. Clicking the blue circle navigates back up one level in the dependency hierarchy.</li>
     </ul>
     <hr>
+    <div class="alert alert-warning" role="alert" id="sunburst-warning-too-big" style="display: none">WARNING: the chart is not displayed in interactive mode because there are too many dependency relationships. You can still explore components and relationships in the components table.</div>
     <div class="form-check" id="sunburst-selector-all">
       <input class="form-check-input" type="radio" name="showComponentsSwitch" id="allComponents" value="allComponents" checked onchange="handleShowComponentsSwitchChange(this)">
       <label class="form-check-label" for="allComponents">
@@ -429,6 +430,7 @@
         }
 
         function resetShowComponentsSwitch() {
+            hideDiv("sunburst-warning-too-big");
             var allComponents = document.getElementById('allComponents');
             var vulnerableComponents = document.getElementById('vulnerableComponents');
             allComponents.checked = true;
@@ -651,8 +653,8 @@
         }
 
 
-        function turnChartIntoImageIfTooManySegments(chartContainerId) {
-            var chartContainerInnerDiv = document.getElementById(chartContainerId);
+        function turnChartIntoImageIfTooManySegments() {
+            var chartContainerInnerDiv = document.getElementById("chart-container-inner");
             var echartsInstance = echarts.getInstanceByDom(chartContainerInnerDiv);
             var echartsInstanceData = echartsInstance.getOption().series[0].data;
             let totalSegments = echartsInstanceData.reduce((sum, node) => sum + countSegments(node), 0);
@@ -660,12 +662,15 @@
             if (totalSegments > 10000) {
                 var chartContainerInnerDivOnlyVuln = document.getElementById("chart-container-only-vulnerable-inner");
                 echarts.getInstanceByDom(chartContainerInnerDivOnlyVuln).dispose();
-                chartContainerInnerDivOnlyVuln.remove();
+                hideDiv("chart-container-only-vulnerable-inner");
 
-                document.getElementById("sunburst-selector-all").innerHTML = '<div class="alert alert-warning" role="alert">WARNING: the chart is not displayed in interactive mode because there are too many dependency relationships. You can still explore components and relationships in the components table.</div>';
-                document.getElementById("sunburst-selector-vulnerable").remove();
+                showDiv("sunburst-warning-too-big");
+
+                hideDiv("sunburst-selector-all");
+                hideDiv("sunburst-selector-vulnerable");
 
                 chartContainerInnerDiv.style.display = "block";
+                chartContainerInnerDiv.style.height = '90vh';
                 echartsInstance.resize();
 
                 var imgData = echartsInstance.getDataURL({
@@ -682,7 +687,7 @@
 
                 chartContainerInnerDiv.innerHTML = '';
                 chartContainerInnerDiv.appendChild(img);
-                chartContainerInnerDiv.style.height = 'auto';                
+                chartContainerInnerDiv.style.height = 'auto';
             }
         }
 
@@ -740,7 +745,7 @@
                     writeToLog("Building permalink...");
                     await compressAndEncode(data);
                 }*/
-                turnChartIntoImageIfTooManySegments("chart-container-inner");
+                turnChartIntoImageIfTooManySegments();
 
                 writeToLog("Finished.");
             }
