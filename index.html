@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sunshine - SBOM visualization tool</title>
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.27.5/full/pyodide.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js"></script>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
@@ -308,6 +308,14 @@
     <div id="footer">Sunshine - SBOM visualization tool | Made by <a href="https://www.linkedin.com/in/lucacapacci/">Luca Capacci</a> | Contributor <a href="https://www.linkedin.com/in/mattiafierro/">Mattia Fierro</a> | <a href="https://github.com/CycloneDX/Sunshine/">GitHub repository</a> | <a href="https://github.com/CycloneDX/Sunshine/blob/main/LICENSE">License</a></div>
     
     <script>
+
+        function fetchDataSync(url) {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", url, false);
+            xhr.send(null);
+            return xhr;
+        }
+
         function generateRandomString() {
             var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
             let result = '';
@@ -399,7 +407,6 @@
             if (!pyodideInstance) {
                 writeToLog("Loading environment...");
                 pyodideInstance = await loadPyodide();
-                await pyodideInstance.loadPackage("requests");
                 writeToLog("Environment loaded!");
             }
         }

@@ -26,11 +26,12 @@ import os
 import html
 import copy
 import re
-import requests
+if __name__ != "__web__":
+    import requests
 import csv
 from decimal import Decimal
 if __name__ == "__web__":
-    from js import writeToLog
+    from js import writeToLog, fetchDataSync
 
 
 VERSION = "0.9"
@@ -1625,18 +1626,26 @@ def get_epss(cve, epss_cache):
         epss_data = epss_cache[cache_key]
     else:
         custom_print(f"Getting EPSS data from {chunk_url}")
-        resp = requests.get(chunk_url)
 
-        if resp.status_code == 404:
+        if __name__ == "__web__":
+            resp = fetchDataSync(chunk_url)
+            resp_status_code = resp.status
+            resp_text = resp.responseText
+        else:
+            resp = requests.get(chunk_url)
+            resp_status_code = resp.status_code
+            resp_text = resp.text
+
+        if resp_status_code == 404:
             epss_cache[cache_key] = None
             return "-"
 
-        if resp.status_code != 200:
+        if resp_status_code != 200:
             epss_cache[cache_key] = None
-            custom_print(f"Unexpected status code ({resp.status_code}) for URL {chunk_url}")
+            custom_print(f"Unexpected status code ({resp_status_code}) for URL {chunk_url}")
             return "-"
 
-        epss_data = resp.text
+        epss_data = resp_text
         epss_cache[cache_key] = epss_data
 
     if epss_data is None:
@@ -1673,18 +1682,25 @@ def get_cisa_kev(cve, cisa_kev_cache):
         cisa_kev_data = cisa_kev_cache[cache_key]
     else:
         custom_print(f"Getting CISA KEV data from {chunk_url}")
-        resp = requests.get(chunk_url)
+        if __name__ == "__web__":
+            resp = fetchDataSync(chunk_url)
+            resp_status_code = resp.status
+            resp_text = resp.responseText
+        else:
+            resp = requests.get(chunk_url)
+            resp_status_code = resp.status_code
+            resp_text = resp.text
 
-        if resp.status_code == 404:
+        if resp_status_code == 404:
             cisa_kev_cache[cache_key] = None
             return "-"
 
-        if resp.status_code != 200:
+        if resp_status_code != 200:
             cisa_kev_cache[cache_key] = None
-            custom_print(f"Unexpected status code ({resp.status_code}) for URL {chunk_url}")
+            custom_print(f"Unexpected status code ({resp_status_code}) for URL {chunk_url}")
             return "-"
 
-        cisa_kev_data = resp.text
+        cisa_kev_data = resp_text
         cisa_kev_cache[cache_key] = cisa_kev_data
 
     if cisa_kev_data is None:
