@@ -51,7 +51,9 @@ VALID_SEVERITIES = {"critical": 4,
                     "low": 1,
                     "info": 0,
                     "information": 0,
-                    "clean": -1}
+                    "unknown": -1,
+                    "clean": -2}
+
 
 GREY = '#bcbcbc'
 GREEN = '#7dd491'
@@ -75,7 +77,8 @@ STYLES = {"critical": CRITICAL_STYLE,
           "medium": MEDIUM_STYLE,
           "low": LOW_STYLE,
           "information": INFORMATION_STYLE,
-          "clean": BASIC_STYLE}
+          "clean": BASIC_STYLE,
+          "unknown": INFORMATION_STYLE}
 
 
 REMAINING_WEB_LOGS = 200
@@ -1471,7 +1474,7 @@ def component_badge_for_table(component):
         badge_class = 'bg-orange'
     elif component["max_vulnerability_severity"] == "low":
         badge_class = 'bg-yellow'
-    elif component["max_vulnerability_severity"] in ["information", "info"]:
+    elif component["max_vulnerability_severity"] in ["information", "info", "unknown"]:
         badge_class = 'bg-success'
     elif component["max_vulnerability_severity"] == "clean":
         if component["has_transitive_vulnerabilities"]:
@@ -1494,7 +1497,7 @@ def get_vulnerability_badge_by_severity(severity):
         return 'bg-orange'
     elif severity == "low":
         return 'bg-yellow'
-    elif severity in ["information", "info"]:
+    elif severity in ["information", "info", "unknown"]:
         return 'bg-success'
     return ''
 
