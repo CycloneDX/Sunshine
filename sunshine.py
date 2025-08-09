@@ -148,6 +148,8 @@ HTML_TEMPLATE = """
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
+            overflow-x:auto;
+            max-width:100%;
         }
         #table-container-placeholder, #info-table-container-placeholder, #vulnerabilities-table-container-placeholder {
             background-color: #fffffF;
