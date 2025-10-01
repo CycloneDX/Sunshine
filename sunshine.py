@@ -2092,14 +2092,10 @@ if __name__ == "__main__":
     ''')
 
     parser = argparse.ArgumentParser(description=f"{NAME}: actionable CycloneDX visualization")
-    parser.add_argument("-v", "--version", help="show program version", action="store_true")
     parser.add_argument("-i", "--input", help="path of input CycloneDX file")
     parser.add_argument("-o", "--output", help="path of output HTML file")
     parser.add_argument("-e", "--enrich", help="enrich CVEs with EPSS and CISA KEV", action="store_true")
     args = parser.parse_args()
-
-    if args.version:
-        exit()
 
     if not args.input or not args.output:
         parser.print_help()
