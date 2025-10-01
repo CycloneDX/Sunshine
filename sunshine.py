@@ -34,7 +34,6 @@ if __name__ == "__web__":
     from js import writeToLog, fetchDataSync
 
 
-VERSION = "0.9"
 NAME = "Sunshine"
 
 PREFERRED_VULNERABILITY_RATING_METHODS_ORDER = ["CVSSv4",
@@ -1309,8 +1308,12 @@ def parse_string(input_string):
 
 def parse_file(input_file_path):
     custom_print("Parsing input file...")
-    with open(input_file_path, 'r') as file:
-        data = json.load(file)
+    try:
+        with open(input_file_path, 'r') as file:
+            data = json.load(file)
+    except Exception as e:
+        with open(input_file_path, 'r', encoding='utf-8',  errors='replace') as file:
+            data = json.load(file)
     return parse_json_data(data)
 
 
@@ -2085,7 +2088,7 @@ if __name__ == "__main__":
  ▗▄▄▖▗▖ ▗▖▗▖  ▗▖ ▗▄▄▖▗▖ ▗▖▗▄▄▄▖▗▖  ▗▖▗▄▄▄▖
 ▐▌   ▐▌ ▐▌▐▛▚▖▐▌▐▌   ▐▌ ▐▌  █  ▐▛▚▖▐▌▐▌   
  ▝▀▚▖▐▌ ▐▌▐▌ ▝▜▌ ▝▀▚▖▐▛▀▜▌  █  ▐▌ ▝▜▌▐▛▀▀▘
-▗▄▄▞▘▝▚▄▞▘▐▌  ▐▌▗▄▄▞▘▐▌ ▐▌▗▄█▄▖▐▌  ▐▌▐▙▄▄▖ v{VERSION}
+▗▄▄▞▘▝▚▄▞▘▐▌  ▐▌▗▄▄▞▘▐▌ ▐▌▗▄█▄▖▐▌  ▐▌▐▙▄▄▖
     ''')
 
     parser = argparse.ArgumentParser(description=f"{NAME}: actionable CycloneDX visualization")
