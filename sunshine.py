@@ -2015,7 +2015,7 @@ def purge_components(components):
                 component["depends_on"].add(original_bom_ref)
 
 
-def main_cli(input_file_path, output_file_path, enrich_cves):
+def main_cli(input_file_path, output_file_path, enrich_cves, segment_limit):
     if not os.path.exists(input_file_path):
         custom_print(f"File does not exist: '{input_file_path}'")
         exit()
@@ -2042,8 +2042,13 @@ def main_cli(input_file_path, output_file_path, enrich_cves):
     components_table_content = build_components_table_content(components)
     vulnerabilities_table_content, max_epss, kev_counter = build_vulnerabilities_table_content(vulnerabilities, components, enrich_cves)
     metadata_table_content = build_metadata_table_content(metadata_info, counter_critical, counter_high, counter_medium, counter_low, counter_info, components, enrich_cves, max_epss, kev_counter)
+
+    html_content = HTML_TEMPLATE
+
+    if segment_limit is False:
+        html_content = html_content.replace('turnChartIntoImageIfTooManySegments("chart-container-inner");', "")
     
-    html_content = HTML_TEMPLATE.replace("<CHART_DATA_HERE>", json.dumps(echart_data_all_components, indent=2))
+    html_content = html_content.replace("<CHART_DATA_HERE>", json.dumps(echart_data_all_components, indent=2))
     html_content = html_content.replace("<CHART_DATA_VULN_HERE>", json.dumps(echart_data_vulnerable_components, indent=2))
     html_content = html_content.replace("<FILE_NAME_HERE>", html.escape(os.path.basename(input_file_path)))
     html_content = html_content.replace("<COMPONENTS_TABLE_HERE>", components_table_content)
@@ -2095,6 +2100,8 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--input", help="path of input CycloneDX file")
     parser.add_argument("-o", "--output", help="path of output HTML file")
     parser.add_argument("-e", "--enrich", help="enrich CVEs with EPSS and CISA KEV", action="store_true")
+    parser.add_argument("-n", "--no-segment-limit", help="prevent the automatic conversion of charts with many segments into images", action="store_true")
+
     args = parser.parse_args()
 
     if not args.input or not args.output:
@@ -2108,7 +2115,9 @@ if __name__ == "__main__":
     if args.enrich:
         enrich_cves = True
 
-    main_cli(input_file_path, output_file_path, enrich_cves)
+    segment_limit = not args.no_segment_limit
+
+    main_cli(input_file_path, output_file_path, enrich_cves, segment_limit)
 
 
 if __name__ == "__web__":
