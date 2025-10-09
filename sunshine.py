@@ -687,7 +687,24 @@ HTML_TEMPLATE = """
             }
         }
 
+        function showWarningIfChartWasNotCreated(chartContainerId) {
+            var chartContainerInnerDiv = document.getElementById(chartContainerId);
+
+            var chartContainerInnerDivOnlyVuln = document.getElementById("chart-container-only-vulnerable-inner");
+            echarts.getInstanceByDom(chartContainerInnerDivOnlyVuln).dispose();
+            chartContainerInnerDivOnlyVuln.remove();
+
+            document.getElementById("sunburst-selector-all").innerHTML = '<div class="alert alert-danger" role="alert">WARNING: the chart is not displayed because there are too many dependency relationships. You can still explore components and relationships in the components table.</div>';
+            document.getElementById("sunburst-selector-vulnerable").remove();
+
+            chartContainerInnerDiv.style.display = "block";
+
+            chartContainerInnerDiv.innerHTML = '';
+            chartContainerInnerDiv.style.height = 'auto';
+        }
+
         turnChartIntoImageIfTooManySegments("chart-container-inner");
+        <SHOW_WARNING_IF_CHART_WAS_NOT_CREATED>
 
 
       </script>
@@ -1378,61 +1395,75 @@ def format_dependency_chain(parents_branch, depends_on):
     return " --> ".join(parents_branch)
 
 
-def get_children(components, component, parents):
-    children = []
-    value = 0
-    has_vulnerable_children_or_is_vulnerable = False
-    if len(component["vulnerabilities"]) > 0:
-        has_vulnerable_children_or_is_vulnerable = True
-    for depends_on in component["depends_on"]:
-        parents_branch = copy.deepcopy(parents)
-        child_name = prepare_chart_element_name(components[depends_on])
-        child_component = components[depends_on]
-        child_component["visited"] = True
-        if depends_on not in parents_branch:  # this is done to avoid infinite recursion in case of circular dependencies
-            parents_branch.append(depends_on)
-            child_children, children_value, has_vulnerable_children_or_is_vulnerable = get_children(components, child_component, parents_branch)
-            if len(child_component["vulnerabilities"]) > 0 or child_component["has_transitive_vulnerabilities"] is True or has_vulnerable_children_or_is_vulnerable is True:
-                component["has_transitive_vulnerabilities"] = True
-                add_transitive_vulnerabilities_to_component(component, child_component["vulnerabilities"])
-                add_transitive_vulnerabilities_to_component(component, child_component["transitive_vulnerabilities"])
-                has_vulnerable_children_or_is_vulnerable = True
+class ChildrenGatherer:
 
-            value += children_value
-            
-            children.append({"name": child_name,
-                             "children": child_children,
-                             "value": children_value,
-                             "itemStyle": determine_style(child_component)
-                             })
-        else:
-            custom_print(f"WARNING: component with bom-ref '{depends_on}' may be a circular dependency. Dependency chain: {format_dependency_chain(parents_branch, depends_on)}")
-            value += 1
-            for child_depends_on in child_component["depends_on"]:
-                child_depends_on = components[child_depends_on]
-                if len(child_depends_on["vulnerabilities"]) > 0 or child_depends_on["has_transitive_vulnerabilities"] is True:
-                    child_component["has_transitive_vulnerabilities"] = True
-                    add_transitive_vulnerabilities_to_component(child_component, child_depends_on["vulnerabilities"])
-                    add_transitive_vulnerabilities_to_component(child_component, child_depends_on["transitive_vulnerabilities"])
+    def __init__(self):
+        self.segments_count = 0
+        self.SEGMENTS_THRESHOLD = 100000
+
+    def get_children(self, components, component, parents):
+        children = []
+        value = 0
+        has_vulnerable_children_or_is_vulnerable = False
+        if len(component["vulnerabilities"]) > 0:
+            has_vulnerable_children_or_is_vulnerable = True
+        for depends_on in component["depends_on"]:
+            parents_branch = copy.deepcopy(parents)
+            child_name = prepare_chart_element_name(components[depends_on])
+            child_component = components[depends_on]
+            child_component["visited"] = True
+            if depends_on not in parents_branch:  # this is done to avoid infinite recursion in case of circular dependencies
+                parents_branch.append(depends_on)
+                child_children, children_value, has_vulnerable_children_or_is_vulnerable = self.get_children(components, child_component, parents_branch)
+
+                self.segments_count += len(child_children)
+
+                if self.segments_count > self.SEGMENTS_THRESHOLD:
+                    raise Exception("Reached segments threshold")
                 
+                if len(child_component["vulnerabilities"]) > 0 or child_component["has_transitive_vulnerabilities"] is True or has_vulnerable_children_or_is_vulnerable is True:
+                    component["has_transitive_vulnerabilities"] = True
+                    add_transitive_vulnerabilities_to_component(component, child_component["vulnerabilities"])
+                    add_transitive_vulnerabilities_to_component(component, child_component["transitive_vulnerabilities"])
+                    has_vulnerable_children_or_is_vulnerable = True
 
-            children.append({"name": child_name,
-                             "children": [],
-                             "value": 1,
-                             "itemStyle": determine_style(child_component)
-                             })
+                value += children_value
+                
+                children.append({"name": child_name,
+                                 "children": child_children,
+                                 "value": children_value,
+                                 "itemStyle": determine_style(child_component)
+                                 })
+            else:
+                custom_print(f"WARNING: component with bom-ref '{depends_on}' may be a circular dependency. Dependency chain: {format_dependency_chain(parents_branch, depends_on)}")
+                value += 1
+                for child_depends_on in child_component["depends_on"]:
+                    child_depends_on = components[child_depends_on]
+                    if len(child_depends_on["vulnerabilities"]) > 0 or child_depends_on["has_transitive_vulnerabilities"] is True:
+                        child_component["has_transitive_vulnerabilities"] = True
+                        add_transitive_vulnerabilities_to_component(child_component, child_depends_on["vulnerabilities"])
+                        add_transitive_vulnerabilities_to_component(child_component, child_depends_on["transitive_vulnerabilities"])
+                    
 
-    if value == 0:
-        value = 1
+                children.append({"name": child_name,
+                                 "children": [],
+                                 "value": 1,
+                                 "itemStyle": determine_style(child_component)
+                                 })
 
-    return children, value, has_vulnerable_children_or_is_vulnerable
+        if value == 0:
+            value = 1
+
+        return children, value, has_vulnerable_children_or_is_vulnerable
 
 
 def add_root_component(components, component, data, bom_ref):
     component["visited"] = True
     parents = [bom_ref]
     root_name = prepare_chart_element_name(component)
-    root_children, root_value, has_vulnerable_children_or_is_vulnerable = get_children(components, component, parents)
+
+    children_gatherer = ChildrenGatherer()
+    root_children, root_value, has_vulnerable_children_or_is_vulnerable = children_gatherer.get_children(components, component, parents)
 
     if has_vulnerable_children_or_is_vulnerable is True:
         component["has_transitive_vulnerabilities"] = True
@@ -2015,6 +2046,34 @@ def purge_components(components):
                 component["depends_on"].add(original_bom_ref)
 
 
+def augment_components_data(components):
+    previous_total_transitive_vulnerabilities = -1
+
+    while True:
+        total_transitive_vulnerabilities = 0
+
+        for bom_ref, component in components.items():
+            if component["visited"] is True:
+                continue
+
+            if len(component["vulnerabilities"]) > 0:
+                component["visited"] = True
+
+            for depends_on in component["depends_on"]:
+                child = components[depends_on]
+                add_transitive_vulnerabilities_to_component(component, child["vulnerabilities"])
+                add_transitive_vulnerabilities_to_component(component, child["transitive_vulnerabilities"])
+
+            if len(component["transitive_vulnerabilities"]) > 0:
+                component["has_transitive_vulnerabilities"] = True
+            total_transitive_vulnerabilities += len(component["transitive_vulnerabilities"])
+
+        if total_transitive_vulnerabilities == previous_total_transitive_vulnerabilities:
+            break
+
+        previous_total_transitive_vulnerabilities = total_transitive_vulnerabilities
+
+
 def main_cli(input_file_path, output_file_path, enrich_cves, segment_limit):
     if not os.path.exists(input_file_path):
         custom_print(f"File does not exist: '{input_file_path}'")
@@ -2028,16 +2087,30 @@ def main_cli(input_file_path, output_file_path, enrich_cves, segment_limit):
 
     purge_components(components)
 
+    create_with_charts = True
+
     # chart with all components
-    echart_data_all_components = build_echarts_data(components)
-    double_check_if_all_components_were_taken_into_account(components, echart_data_all_components)
+    try:
+        echart_data_all_components = build_echarts_data(components)
+    except Exception as e:
+        if str(e) == "Reached segments threshold":
+            custom_print("Too many dependency relationships, I will generate tables without charts.")
+            create_with_charts = False
+        else:
+            raise e
+
+    if create_with_charts is True:
+        double_check_if_all_components_were_taken_into_account(components, echart_data_all_components)
+    else:
+        augment_components_data(components)
 
     vulnerabilities, counter_critical, counter_high, counter_medium, counter_low, counter_info = parse_vulnerabilities(components)
 
-    # chart with only vulnerable components
-    vulnerable_components = get_only_vulnerable_components(components)
-    echart_data_vulnerable_components = build_echarts_data(vulnerable_components)
-    double_check_if_all_components_were_taken_into_account(vulnerable_components, echart_data_vulnerable_components)
+    if create_with_charts is True:
+        # chart with only vulnerable components
+        vulnerable_components = get_only_vulnerable_components(components)
+        echart_data_vulnerable_components = build_echarts_data(vulnerable_components)
+        double_check_if_all_components_were_taken_into_account(vulnerable_components, echart_data_vulnerable_components)
 
     components_table_content = build_components_table_content(components)
     vulnerabilities_table_content, max_epss, kev_counter = build_vulnerabilities_table_content(vulnerabilities, components, enrich_cves)
@@ -2048,8 +2121,15 @@ def main_cli(input_file_path, output_file_path, enrich_cves, segment_limit):
     if segment_limit is False:
         html_content = html_content.replace('turnChartIntoImageIfTooManySegments("chart-container-inner");', "")
     
-    html_content = html_content.replace("<CHART_DATA_HERE>", json.dumps(echart_data_all_components, indent=2))
-    html_content = html_content.replace("<CHART_DATA_VULN_HERE>", json.dumps(echart_data_vulnerable_components, indent=2))
+    if create_with_charts is True:
+        html_content = html_content.replace("<CHART_DATA_HERE>", json.dumps(echart_data_all_components, indent=2))
+        html_content = html_content.replace("<CHART_DATA_VULN_HERE>", json.dumps(echart_data_vulnerable_components, indent=2))
+        html_content = html_content.replace("<SHOW_WARNING_IF_CHART_WAS_NOT_CREATED>", '');
+    else:
+        html_content = html_content.replace("<CHART_DATA_HERE>", "[]")
+        html_content = html_content.replace("<CHART_DATA_VULN_HERE>", "[]")
+        html_content = html_content.replace("<SHOW_WARNING_IF_CHART_WAS_NOT_CREATED>", 'showWarningIfChartWasNotCreated("chart-container-inner");');
+
     html_content = html_content.replace("<FILE_NAME_HERE>", html.escape(os.path.basename(input_file_path)))
     html_content = html_content.replace("<COMPONENTS_TABLE_HERE>", components_table_content)
     html_content = html_content.replace("<VULNERABILITIES_TABLE_HERE>", vulnerabilities_table_content)
@@ -2068,24 +2148,41 @@ def main_web(input_string, enrich_cves):
 
     purge_components(components)
 
+    create_with_charts = True
+
     # chart with all components
-    echart_data_all_components = build_echarts_data(components)
-    double_check_if_all_components_were_taken_into_account(components, echart_data_all_components)
-    echart_data_all_components = json.dumps(echart_data_all_components, indent=2)
+    try:
+        echart_data_all_components = build_echarts_data(components)
+    except Exception as e:
+        if str(e) == "Reached segments threshold":
+            custom_print("Too many dependency relationships, I will generate tables without charts.")
+            create_with_charts = False
+        else:
+            raise e
+
+    if create_with_charts is True:
+        double_check_if_all_components_were_taken_into_account(components, echart_data_all_components)
+        echart_data_all_components = json.dumps(echart_data_all_components, indent=2)
+    else:
+        augment_components_data(components)
+        echart_data_all_components = "[]"
 
     vulnerabilities, counter_critical, counter_high, counter_medium, counter_low, counter_info = parse_vulnerabilities(components)
 
-    # chart with only vulnerable components
-    vulnerable_components = get_only_vulnerable_components(components)
-    echart_data_vulnerable_components = build_echarts_data(vulnerable_components)
-    double_check_if_all_components_were_taken_into_account(vulnerable_components, echart_data_vulnerable_components)
-    echart_data_vulnerable_components = json.dumps(echart_data_vulnerable_components, indent=2)
+    if create_with_charts is True:
+        # chart with only vulnerable components
+        vulnerable_components = get_only_vulnerable_components(components)
+        echart_data_vulnerable_components = build_echarts_data(vulnerable_components)
+        double_check_if_all_components_were_taken_into_account(vulnerable_components, echart_data_vulnerable_components)
+        echart_data_vulnerable_components = json.dumps(echart_data_vulnerable_components, indent=2)
+    else:
+        echart_data_vulnerable_components = "[]"
 
     components_table_content = build_components_table_content(components)
     vulnerabilities_table_content, max_epss, kev_counter = build_vulnerabilities_table_content(vulnerabilities, components, enrich_cves)
     metadata_table_content = build_metadata_table_content(metadata_info, counter_critical, counter_high, counter_medium, counter_low, counter_info, components, enrich_cves, max_epss, kev_counter)
     
-    return echart_data_all_components, echart_data_vulnerable_components, components_table_content, metadata_table_content, vulnerabilities_table_content
+    return echart_data_all_components, echart_data_vulnerable_components, components_table_content, metadata_table_content, vulnerabilities_table_content, create_with_charts
 
 
 if __name__ == "__main__":
@@ -2100,7 +2197,7 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--input", help="path of input CycloneDX file")
     parser.add_argument("-o", "--output", help="path of output HTML file")
     parser.add_argument("-e", "--enrich", help="enrich CVEs with EPSS and CISA KEV", action="store_true")
-    parser.add_argument("-n", "--no-segment-limit", help="prevent the automatic conversion of charts with many segments into images", action="store_true")
+    parser.add_argument("-n", "--no-segment-limit", help="prevent the automatic conversion of charts with many segments into still images", action="store_true")
 
     args = parser.parse_args()
 
@@ -2121,10 +2218,11 @@ if __name__ == "__main__":
 
 
 if __name__ == "__web__":
-    echart_data_all_components, echart_data_vulnerable_components, components_table_content, metadata_table_content, vulnerabilities_table_content = main_web(INPUT_DATA, DO_ENRICHMENT)
+    echart_data_all_components, echart_data_vulnerable_components, components_table_content, metadata_table_content, vulnerabilities_table_content, chart_was_created = main_web(INPUT_DATA, DO_ENRICHMENT)
     OUTPUT_CHART_DATA = echart_data_all_components
     OUTPUT_CHART_DATA_VULNERABLE_COMPONENTS = echart_data_vulnerable_components
     OUTPUT_COMPONENTS_TABLE_DATA = components_table_content
     OUTPUT_METADATA_TABLE_DATA = metadata_table_content
     OUTPUT_VULNERABILITIES_TABLE_DATA = vulnerabilities_table_content
+    CHART_WAS_CREATED = chart_was_created
 

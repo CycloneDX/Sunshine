@@ -26,14 +26,15 @@ Usage of the CLI version:
 ```
 pip3 install -r requirements.txt
 
-sunshine.py [-h] [-v] [-i INPUT] [-o OUTPUT]
+sunshine.py [-h] [-i INPUT] [-o OUTPUT] [-e] [-n]
 
 options:
-  -h, --help           show this help message and exit
-  -v, --version        show program version
-  -i, --input INPUT    path of input CycloneDX file
-  -o, --output OUTPUT  path of output HTML file
-  -e, --enrich         enrich CVEs with EPSS and CISA KEV
+  -h, --help              show this help message and exit
+  -i, --input INPUT       path of input CycloneDX file
+  -o, --output OUTPUT     path of output HTML file
+  -e, --enrich            enrich CVEs with EPSS and CISA KEV
+  -n, --no-segment-limit  prevent the automatic conversion of charts with many segments into still images
+
 ```
 
 <br>

@@ -220,6 +220,7 @@
     </ul>
     <hr>
     <div class="alert alert-warning" role="alert" id="sunburst-warning-too-big" style="display: none">WARNING: the chart is not displayed in interactive mode because there are too many dependency relationships. You can still explore components and relationships in the components table.</div>
+    <div class="alert alert-danger" role="alert" id="sunburst-danger-too-big" style="display: none">WARNING: the chart is not displayed because there are too many dependency relationships. You can still explore components and relationships in the components table.</div>
     <div class="form-check" id="sunburst-selector-all">
       <input class="form-check-input" type="radio" name="showComponentsSwitch" id="allComponents" value="allComponents" checked onchange="handleShowComponentsSwitchChange(this)">
       <label class="form-check-label" for="allComponents">
@@ -438,6 +439,10 @@
 
         function resetShowComponentsSwitch() {
             hideDiv("sunburst-warning-too-big");
+            hideDiv("sunburst-danger-too-big");
+            showDiv("sunburst-selector-all");
+            showDiv("sunburst-selector-vulnerable");
+
             var allComponents = document.getElementById('allComponents');
             var vulnerableComponents = document.getElementById('vulnerableComponents');
             allComponents.checked = true;
@@ -698,6 +703,18 @@
             }
         }
 
+        function showWarningIfChartWasNotCreated() {
+
+            var chartContainerInnerDivOnlyVuln = document.getElementById("chart-container-only-vulnerable-inner");
+            hideDiv("chart-container-only-vulnerable-inner");
+            hideDiv("chart-container-inner")
+
+            showDiv("sunburst-danger-too-big");
+
+            hideDiv("sunburst-selector-all");
+            hideDiv("sunburst-selector-vulnerable");
+        }
+
 
         async function loadAndRunScript(data, fromPermalink) {
             await loadPyodideAndRun();
@@ -723,6 +740,8 @@
 
                 var result = await pyodideInstance.runPythonAsync(pythonScript);
                 writeToLog("Execution complete!");
+
+                document.getElementById("chart-container-inner").style.height = '90vh';
             
                 let echartData = pyodideInstance.globals.get('OUTPUT_CHART_DATA');
                 writeToLog("Building chart...");
@@ -747,6 +766,12 @@
                 writeToLog("Building summary table...");
                 renderTable(metadataTableContent, "info-table", "info-table-container", "info-table-container-placeholder", null);
                 writeToLog("Summary table built!");
+
+                let chartWasCreated = pyodideInstance.globals.get('CHART_WAS_CREATED');
+
+                if (!chartWasCreated) {
+                    showWarningIfChartWasNotCreated();
+                }
 
                 /*if (fromPermalink == false) {
                     writeToLog("Building permalink...");
