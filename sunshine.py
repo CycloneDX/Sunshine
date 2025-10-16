@@ -1238,7 +1238,7 @@ def parse_json_data(data):
                             guessed_bom_ref = normalize_bom_ref(all_bom_refs, depends_on)
                             guessed_bom_refs_cache[depends_on] = guessed_bom_ref
 
-                            if guessed_bom_ref is None:
+                            if guessed_bom_ref is None or guessed_bom_ref not in components:
                                 custom_print(f"Match not found. I'll create a fake one.")
                                 components[depends_on] = create_fake_component(depends_on)
                             else:
@@ -1272,7 +1272,7 @@ def parse_json_data(data):
                     custom_print(f"WARNING: 'ref' '{bom_ref}' is used in 'dependencies' in a 'ref' field but it's not declared in 'components'. I'll search for a match...")
                     guessed_bom_ref = normalize_bom_ref(all_bom_refs, bom_ref)
                     guessed_bom_refs_cache[bom_ref] = guessed_bom_ref
-                    if guessed_bom_ref is None:
+                    if guessed_bom_ref is None or guessed_bom_ref not in components:
                         custom_print(f"Match not found. I'll create a fake one.")
                         components[bom_ref] = create_fake_component(bom_ref)
                     else:
@@ -1288,7 +1288,7 @@ def parse_json_data(data):
                             custom_print(f"WARNING: 'dependsOn' '{depends_on}' is used in 'dependencies' in a 'dependsOn' field but it's not declared in 'components'. I'll search for a match...")
                             guessed_bom_ref = normalize_bom_ref(all_bom_refs, depends_on)
                             guessed_bom_refs_cache[depends_on] = guessed_bom_ref
-                            if guessed_bom_ref is None:
+                            if guessed_bom_ref is None or guessed_bom_ref not in components:
                                 custom_print(f"Match not found. I'll create a fake one.")
                                 components[depends_on] = create_fake_component(depends_on)
                             else:
