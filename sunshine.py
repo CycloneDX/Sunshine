@@ -1193,12 +1193,52 @@ def parse_metadata(data):
     return metadata_info
 
 
-def parse_json_data(data):
+def should_add_vulnerability(vulnerability_data, only_in_cisa_kev, only_critical_severity, only_high_severity_or_above, only_medium_severity_or_above, only_low_severity_or_above, min_cvss, min_epss, enrich_cves):
+    if only_in_cisa_kev is False and only_critical_severity is False and only_high_severity_or_above is False and only_medium_severity_or_above is False and only_low_severity_or_above is False and min_cvss == 0.0 and min_epss == 0.00:
+        return True
+
+    if enrich_cves is True:
+        if only_in_cisa_kev is True and vulnerability_data["cisa_kev"] == "-":
+            return False
+        if vulnerability_data["epss"] == "-":
+            if min_epss > 0.00:
+                return False
+        else:
+            if float(vulnerability_data["epss"]) < min_epss:
+                return False
+
+    if only_critical_severity is True and vulnerability_data["severity"] != "critical":
+        return False
+
+    if only_high_severity_or_above is True and vulnerability_data["severity"] not in ["critical", "high"]:
+        return False
+
+    if only_medium_severity_or_above is True and vulnerability_data["severity"] not in ["critical", "high", "medium"]:
+        return False
+
+    if only_low_severity_or_above is True and vulnerability_data["severity"] not in ["critical", "high", "medium", "low"]:
+        return False
+
+    if vulnerability_data["score"] == "-":
+        if min_cvss > 0.0:
+            return False
+    else:
+        if float(vulnerability_data["score"]) < min_cvss:
+            return False
+
+    return True
+
+
+def parse_json_data(data, enrich_cves, only_in_cisa_kev, only_critical_severity, only_high_severity_or_above, only_medium_severity_or_above, only_low_severity_or_above, min_cvss, min_epss):
     all_bom_refs, meta_bom_ref_is_used = get_all_bom_refs(data)
 
     guessed_bom_refs_cache = {}
 
     components = {}
+
+    if enrich_cves is True:
+        epss_cache = {}
+        cisa_kev_cache = {}
 
     root_keywords = []
     if "components" in data:
@@ -1257,10 +1297,18 @@ def parse_json_data(data):
                     vuln_id, vuln_severity, vuln_score, vuln_vector = parse_vulnerability_data(vulnerability)
 
                     vulnerability_data = {"id": vuln_id, "severity": vuln_severity, "score": vuln_score, "vector": vuln_vector}
-                    if vulnerability_data not in components[bom_ref]["vulnerabilities"]:
-                        components[bom_ref]["vulnerabilities"].append(vulnerability_data)
-                    if VALID_SEVERITIES[vuln_severity] > VALID_SEVERITIES[components[bom_ref]["max_vulnerability_severity"]]:
-                        components[bom_ref]["max_vulnerability_severity"] = vuln_severity
+
+                    if enrich_cves is True:
+                        current_epss = get_epss(vuln_id, epss_cache)
+                        current_cisa_kev = get_cisa_kev(vuln_id, cisa_kev_cache)
+                        vulnerability_data["epss"] = current_epss
+                        vulnerability_data["cisa_kev"] = cisa_kev
+
+                    if should_add_vulnerability(vulnerability_data, only_in_cisa_kev, only_critical_severity, only_high_severity_or_above, only_medium_severity_or_above, only_low_severity_or_above, min_cvss, min_epss, enrich_cves):
+                        if vulnerability_data not in components[bom_ref]["vulnerabilities"]:
+                            components[bom_ref]["vulnerabilities"].append(vulnerability_data)
+                        if VALID_SEVERITIES[vuln_severity] > VALID_SEVERITIES[components[bom_ref]["max_vulnerability_severity"]]:
+                            components[bom_ref]["max_vulnerability_severity"] = vuln_severity
 
     if "dependencies" in data:
         for dependency in data["dependencies"]:
@@ -1309,21 +1357,30 @@ def parse_json_data(data):
                     components[bom_ref] = create_fake_component(bom_ref)
 
                 vulnerability_data = {"id": vuln_id, "severity": vuln_severity, "score": vuln_score, "vector": vuln_vector}
-                if vulnerability_data not in components[bom_ref]["vulnerabilities"]:
-                    components[bom_ref]["vulnerabilities"].append(vulnerability_data)
-                if VALID_SEVERITIES[vuln_severity] > VALID_SEVERITIES[components[bom_ref]["max_vulnerability_severity"]]:
-                    components[bom_ref]["max_vulnerability_severity"] = vuln_severity
+
+                if enrich_cves is True:
+                        current_epss = get_epss(vuln_id, epss_cache)
+                        current_cisa_kev = get_cisa_kev(vuln_id, cisa_kev_cache)
+                        vulnerability_data["epss"] = current_epss
+                        vulnerability_data["cisa_kev"] = current_cisa_kev
+
+                if should_add_vulnerability(vulnerability_data, only_in_cisa_kev, only_critical_severity, only_high_severity_or_above, only_medium_severity_or_above, only_low_severity_or_above, min_cvss, min_epss, enrich_cves):
+
+                    if vulnerability_data not in components[bom_ref]["vulnerabilities"]:
+                        components[bom_ref]["vulnerabilities"].append(vulnerability_data)
+                    if VALID_SEVERITIES[vuln_severity] > VALID_SEVERITIES[components[bom_ref]["max_vulnerability_severity"]]:
+                        components[bom_ref]["max_vulnerability_severity"] = vuln_severity
 
     return components, metadata_info
 
 
-def parse_string(input_string):
+def parse_string(input_string, enrich_cves, only_in_cisa_kev, only_critical_severity, only_high_severity_or_above, only_medium_severity_or_above, only_low_severity_or_above, min_cvss, min_epss):
     custom_print("Parsing input string...")
     data = json.loads(input_string)
-    return parse_json_data(data)
+    return parse_json_data(data, enrich_cves, only_in_cisa_kev, only_critical_severity, only_high_severity_or_above, only_medium_severity_or_above, only_low_severity_or_above, min_cvss, min_epss)
 
 
-def parse_file(input_file_path):
+def parse_file(input_file_path, enrich_cves, only_in_cisa_kev, only_critical_severity, only_high_severity_or_above, only_medium_severity_or_above, only_low_severity_or_above, min_cvss, min_epss):
     custom_print("Parsing input file...")
     try:
         with open(input_file_path, 'r') as file:
@@ -1331,7 +1388,7 @@ def parse_file(input_file_path):
     except Exception as e:
         with open(input_file_path, 'r', encoding='utf-8',  errors='replace') as file:
             data = json.load(file)
-    return parse_json_data(data)
+    return parse_json_data(data, enrich_cves, only_in_cisa_kev, only_critical_severity, only_high_severity_or_above, only_medium_severity_or_above, only_low_severity_or_above, min_cvss, min_epss)
 
 
 def prepare_chart_element_name(component):
@@ -1799,9 +1856,6 @@ def build_vulnerabilities_table_content(vulnerabilities, components, enrich_cves
     rows = [first_row]
     rows.append("<tbody>")
 
-    epss_cache = {}
-    cisa_kev_cache = {}
-
     for _, vulnerability in vulnerabilities.items():
         rows.append("<tr>")
         badge_class = get_vulnerability_badge_by_severity(vulnerability["severity"])
@@ -1812,9 +1866,9 @@ def build_vulnerabilities_table_content(vulnerabilities, components, enrich_cves
         rows.append("<td>" + f'{html.escape(vulnerability["vector"])}' + "</td>")
 
         if enrich_cves is True:
-            current_epss = get_epss(vulnerability["id"], epss_cache)
+            current_epss = vulnerability["epss"]
             rows.append("<td>" + f'{html.escape(current_epss)}' + "</td>")
-            current_cisa_kev = get_cisa_kev(vulnerability["id"], cisa_kev_cache)
+            current_cisa_kev = vulnerability["cisa_kev"]
             rows.append("<td>" + f'{html.escape(current_cisa_kev)}' + "</td>")
             if current_epss > max_epss:
                 max_epss = current_epss
@@ -1950,7 +2004,7 @@ def get_only_vulnerable_components(components):
     return vulnerable_components
 
 
-def parse_vulnerabilities(components):
+def parse_vulnerabilities(components, enrich_cves):
     vulnerabilities = {}
 
     counter_critical = 0
@@ -1974,6 +2028,9 @@ def parse_vulnerabilities(components):
                                              "vector": vulnerability['vector'],
                                              "directly_vulnerable_components": set(),
                                              "transitively_vulnerable_components": set()}
+                if enrich_cves is True:
+                    vulnerabilities[vuln_key]["epss"] = vulnerability['epss']
+                    vulnerabilities[vuln_key]["cisa_kev"] = vulnerability['cisa_kev']
 
                 if vulnerability['severity'] == "critical":
                     counter_critical += 1
@@ -1998,6 +2055,10 @@ def parse_vulnerabilities(components):
                                              "vector": vulnerability['vector'],
                                              "directly_vulnerable_components": set(),
                                              "transitively_vulnerable_components": set()}
+
+                if enrich_cves is True:
+                    vulnerabilities[vuln_key]["epss"] = vulnerability['epss']
+                    vulnerabilities[vuln_key]["cisa_kev"] = vulnerability['cisa_kev']
 
                 if vulnerability['severity'] == "critical":
                     counter_critical += 1
@@ -2074,13 +2135,13 @@ def augment_components_data(components):
         previous_total_transitive_vulnerabilities = total_transitive_vulnerabilities
 
 
-def main_cli(input_file_path, output_file_path, enrich_cves, segment_limit):
+def main_cli(input_file_path, output_file_path, enrich_cves, segment_limit, only_in_cisa_kev, only_critical_severity, only_high_severity_or_above, only_medium_severity_or_above, only_low_severity_or_above, min_cvss, min_epss):
     if not os.path.exists(input_file_path):
         custom_print(f"File does not exist: '{input_file_path}'")
         exit()
 
     try:
-        components, metadata_info = parse_file(input_file_path)
+        components, metadata_info = parse_file(input_file_path, enrich_cves, only_in_cisa_kev, only_critical_severity, only_high_severity_or_above, only_medium_severity_or_above, only_low_severity_or_above, min_cvss, min_epss)
     except Exception as e:
         custom_print(f"Error parsing input file: {e}")
         exit()
@@ -2104,7 +2165,7 @@ def main_cli(input_file_path, output_file_path, enrich_cves, segment_limit):
     else:
         augment_components_data(components)
 
-    vulnerabilities, counter_critical, counter_high, counter_medium, counter_low, counter_info = parse_vulnerabilities(components)
+    vulnerabilities, counter_critical, counter_high, counter_medium, counter_low, counter_info = parse_vulnerabilities(components, enrich_cves)
 
     if create_with_charts is True:
         # chart with only vulnerable components
@@ -2139,9 +2200,9 @@ def main_cli(input_file_path, output_file_path, enrich_cves, segment_limit):
     custom_print("Done.")
 
 
-def main_web(input_string, enrich_cves):
+def main_web(input_string, enrich_cves, only_in_cisa_kev, only_critical_severity, only_high_severity_or_above, only_medium_severity_or_above, only_low_severity_or_above, min_cvss, min_epss):
     try:
-        components, metadata_info = parse_string(input_string)
+        components, metadata_info = parse_string(input_string, enrich_cves, only_in_cisa_kev, only_critical_severity, only_high_severity_or_above, only_medium_severity_or_above, only_low_severity_or_above, min_cvss, min_epss)
     except Exception as e:
         custom_print(f"Error parsing input string: {e}")
         exit()
@@ -2167,7 +2228,7 @@ def main_web(input_string, enrich_cves):
         augment_components_data(components)
         echart_data_all_components = "[]"
 
-    vulnerabilities, counter_critical, counter_high, counter_medium, counter_low, counter_info = parse_vulnerabilities(components)
+    vulnerabilities, counter_critical, counter_high, counter_medium, counter_low, counter_info = parse_vulnerabilities(components, enrich_cves)
 
     if create_with_charts is True:
         # chart with only vulnerable components
@@ -2196,7 +2257,19 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=f"{NAME}: actionable CycloneDX visualization")
     parser.add_argument("-i", "--input", help="path of input CycloneDX file")
     parser.add_argument("-o", "--output", help="path of output HTML file")
+
     parser.add_argument("-e", "--enrich", help="enrich CVEs with EPSS and CISA KEV", action="store_true")
+    parser.add_argument("-k", "--only-in-cisa-kev", help="show only vulnerabilities in CISA KEV", action="store_true")
+
+    parser.add_argument("-cs", "--only-critical-severity", help="show only vulnerabilities with critical severity", action="store_true")
+    parser.add_argument("-hs", "--only-high-severity-or-above", help="show only vulnerabilities with high severity or above", action="store_true")
+    parser.add_argument("-ms", "--only-medium-severity-or-above", help="show only vulnerabilities with medium severity or above", action="store_true")
+    parser.add_argument("-ls", "--only-low-severity-or-above", help="show only vulnerabilities with low severity or above", action="store_true")
+
+    parser.add_argument("-c", "--min-cvss", help="show only vulnerabilities with score equal to or greater than the selected value, which can be in rage 0.0-10.0")
+
+    parser.add_argument("-p", "--min-epss", help="show only vulnerabilities with EPSS equal to or greater than the selected value, which can be in rage 0.00-1.00")
+
     parser.add_argument("-n", "--no-segment-limit", help="prevent the automatic conversion of charts with many segments into still images", action="store_true")
 
     args = parser.parse_args()
@@ -2214,11 +2287,74 @@ if __name__ == "__main__":
 
     segment_limit = not args.no_segment_limit
 
-    main_cli(input_file_path, output_file_path, enrich_cves, segment_limit)
+    only_in_cisa_kev = False
+    if args.only_in_cisa_kev:
+        only_in_cisa_kev = True
+
+    if enrich_cves is False and only_in_cisa_kev is True:
+        custom_print("Argument '--only-in-cisa-kev' can be used only in conjunction with '--enrich' argument")
+
+    only_critical_severity = False
+    if args.only_critical_severity:
+        only_critical_severity = True
+
+    only_high_severity_or_above = False
+    if args.only_high_severity_or_above:
+        only_high_severity_or_above = True
+
+    only_medium_severity_or_above = False
+    if args.only_medium_severity_or_above:
+        only_medium_severity_or_above = True
+
+    only_low_severity_or_above = False
+    if args.only_low_severity_or_above:
+        only_low_severity_or_above = True
+
+    min_cvss = args.min_cvss
+    if min_cvss is None:
+        min_cvss = 0.0
+    else:
+        try:
+            min_cvss = float(min_cvss)
+        except Exception as e:
+            custom_print(f"Error with '--min-cvss' argument. Provided value is not a float: {min_cvss}")
+            exit()
+        if min_cvss < 0.0 or min_cvss > 10.0:
+            custom_print(f"Error with '--min-cvss' argument. Provided value is not in range 0.0-10.0: {min_cvss}")
+            exit()
+
+    min_epss = args.min_epss
+    if min_epss is None:
+        min_epss = 0.00
+    else:
+        try:
+            min_epss = float(min_epss)
+        except Exception as e:
+            custom_print(f"Error with '--min-epss' argument. Provided value is not a float: {min_epss}")
+            exit()
+        if min_epss < 0.00 or min_epss > 1.00:
+            custom_print(f"Error with '--min-epss' argument. Provided value is not in range 0.00-1.00: {min_epss}")
+            exit()
+    if enrich_cves is False and min_epss > 0.00:
+        custom_print("Argument '--min-epss' can be used only in conjunction with '--enrich' argument")
+
+    main_cli(input_file_path, output_file_path, enrich_cves, segment_limit, only_in_cisa_kev, only_critical_severity, only_high_severity_or_above, only_medium_severity_or_above, only_low_severity_or_above, min_cvss, min_epss)
+
 
 
 if __name__ == "__web__":
-    echart_data_all_components, echart_data_vulnerable_components, components_table_content, metadata_table_content, vulnerabilities_table_content, chart_was_created = main_web(INPUT_DATA, DO_ENRICHMENT)
+    input_data = INPUT_DATA
+    do_enrichment = DO_ENRICHMENT
+    only_in_cisa_kev = ONLY_IN_CISA_KEV
+    only_critical_severity = ONLY_CRITICAL_SEVERITY
+    only_high_severity_or_above = ONLY_HIGH_SEVERITY_OR_ABOVE
+    only_medium_severity_or_above = ONLY_MEDIUM_SEVERITY_OR_ABOVE
+    only_low_severity_or_above = ONLY_LOW_SEVERITY_OR_ABOVE
+    min_cvss = MIN_CVSS
+    min_epss = MIN_EPSS
+
+
+    echart_data_all_components, echart_data_vulnerable_components, components_table_content, metadata_table_content, vulnerabilities_table_content, chart_was_created = main_web(input_data, do_enrichment, only_in_cisa_kev, only_critical_severity, only_high_severity_or_above, only_medium_severity_or_above, only_low_severity_or_above, min_cvss, min_epss)
     OUTPUT_CHART_DATA = echart_data_all_components
     OUTPUT_CHART_DATA_VULNERABLE_COMPONENTS = echart_data_vulnerable_components
     OUTPUT_COMPONENTS_TABLE_DATA = components_table_content

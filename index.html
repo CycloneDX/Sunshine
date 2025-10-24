@@ -164,6 +164,11 @@
                 background-image: none !important;
             }
         }
+
+        .small-note {
+            font-size:8pt; 
+            color: grey;
+        }
     
     </style>
 </head>
@@ -178,10 +183,119 @@
             <li>If your SBOM file is not in the CycloneDX JSON format, such as SPDX or CycloneDX XML, you can convert it using <a href="https://CycloneDX.github.io/cyclonedx-web-tool/convert">CycloneDX Web Tool.</a></li>
             <li>If you prefer using a standalone CLI version <a href="https://github.com/CycloneDX/Sunshine/">download it here.</a></li>
         </ul>
-        <div class="form-check form-switch">
-          <input class="form-check-input" type="checkbox" role="switch" id="enrich-check" checked>
-          <label class="form-check-label" for="enrich-check">Enrich data with EPSS and CISA KEV</label>
-        </div>
+
+        <br>
+        <p>Settings:</p>
+        <table style="margin-left: 20px; margin-bottom: 10px">
+            <tr>
+                <td style="border-right: 1px solid; border-right-color: lightgrey; padding-right: 20px;">
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" role="switch" id="enrich-check" checked>
+                      <label class="form-check-label" for="enrich-check">Enrich data with EPSS and CISA KEV</label>
+                    </div>
+                </td>
+
+                <td style="border-right: 1px solid; border-right-color: lightgrey; padding-right: 20px; padding-left: 20px;">
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" role="switch" id="cisa-kev-check">
+                      <label class="form-check-label" for="cisa-kev-check">Show only vulnerabilities in CISA KEV</label>
+                      <p class="small-note"><i>Note: this setting can be used ony when data enrichment is enabled</i></p>
+                    </div>
+                </td>
+
+                <td style="border-right: 1px solid; border-right-color: lightgrey; padding-right: 10px; padding-left: 10px;">
+                    <div>Show only vulnerabilities with severity:</div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="severity-switch" id="radio-any" value="severity-any" checked onchange="handleSeveritySwitchChange(this)">
+                      <label class="form-check-label" for="radio-any">
+                        Any
+                      </label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="severity-switch" id="radio-critical" value="severity-critical" onchange="handleSeveritySwitchChange(this)">
+                      <label class="form-check-label" for="radio-critical">
+                        Critical
+                      </label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="severity-switch" id="radio-high" value="severity-high" onchange="handleSeveritySwitchChange(this)">
+                      <label class="form-check-label" for="radio-high">
+                        High or above
+                      </label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="severity-switch" id="radio-medium" value="severity-medium" onchange="handleSeveritySwitchChange(this)">
+                      <label class="form-check-label" for="radio-medium">
+                        Medium or above
+                      </label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="severity-switch" id="radio-low" value="severity-low" onchange="handleSeveritySwitchChange(this)">
+                      <label class="form-check-label" for="radio-low">
+                        Low or above
+                      </label>
+                    </div>
+
+                </td>
+
+                <td style="border-right: 1px solid; border-right-color: lightgrey; padding-right: 20px; padding-left: 20px;">
+                    <label for="min-cvss" class="form-label">Show only vulnerabilities with CVSS equal to or greater than:</label>
+                    <div>
+                        <input 
+                          type="range" 
+                          class="form-range" 
+                          id="cvssRangeInput" 
+                          name="cvssRangeInput" 
+                          min="0" 
+                          max="10" 
+                          step="0.1" 
+                          value="0.0">
+                        <div>Selected CVSS: <span id="cvssRangeValue">0.0</span></div>
+                    </div>
+                    <script>
+                      const cvssRangeInput = document.getElementById('cvssRangeInput');
+                      const cvssRangeValue = document.getElementById('cvssRangeValue');
+
+                      cvssRangeInput.addEventListener('input', () => {
+                        var currentCvss = parseFloat(cvssRangeInput.value);
+                        cvssRangeValue.textContent = currentCvss.toFixed(1);
+                        handleCvssChange(currentCvss);
+                      });
+                    </script>
+                </td>
+
+                <td style="border-right: 1px solid; border-right-color: lightgrey; padding-right: 20px; padding-left: 20px;">
+                    <label for="min-cvss" class="form-label" id="min-epss-label">Show only vulnerabilities with EPSS equal to or greater than:</label>
+                    <div>
+                        <input 
+                          type="range" 
+                          class="form-range" 
+                          id="epssRangeInput" 
+                          name="epssRangeInput" 
+                          min="0" 
+                          max="100" 
+                          step="1" 
+                          value="0">
+                        <div><span id="epss-fixed-text">Selected EPSS:</span> <span id="epssRangeValue">0.00</span></div>
+                        <p class="small-note"><i>Note: this setting can be used ony when data enrichment is enabled</i></p>
+                    </div>
+                    <script>
+                      const epssRangeInput = document.getElementById('epssRangeInput');
+                      const epssRangeValue = document.getElementById('epssRangeValue');
+
+                      epssRangeInput.addEventListener('input', () => {
+                        var currentEpss = parseFloat(epssRangeInput.value).toFixed(2)/100;
+                        epssRangeValue.textContent = currentEpss.toFixed(2);
+                        handleEpssChange(currentEpss);
+                      });
+                    </script>
+                </td>
+
+            </tr>
+        </table>
+        <button type="button" class="btn btn-primary" id="apply-settings" disabled>Apply settings</button>
+
+
     </div>
 
     <br>
@@ -451,7 +565,24 @@
         }
 
         var file = null;
+
         var doEnrichment = true;
+        var onlyInCisaKev = false;
+        var onlyCriticalSeverity = false;
+        var onlyHighSeverityOrAbove = false;
+        var onlyMediumSeverityOrAbove = false;
+        var onlyLowSeverityOrAbove = false;
+        var minCvss = 0.0;
+        var minEpss = 0.00;
+
+        var doEnrichmentNew = true;
+        var onlyInCisaKevNew = false;
+        var onlyCriticalSeverityNew = false;
+        var onlyHighSeverityOrAboveNew = false;
+        var onlyMediumSeverityOrAboveNew = false;
+        var onlyLowSeverityOrAboveNew = false;
+        var minCvssNew = 0.0;
+        var minEpssNew = 0.00;
         
         document.getElementById('file-input').addEventListener('change', handleFile);
         function handleFile(event) {
@@ -459,15 +590,104 @@
             parseFile();
         }
 
+        function checkSettingsHaveChanged() {
+            if (doEnrichment) {
+                if (doEnrichment != doEnrichmentNew || onlyInCisaKev != onlyInCisaKevNew || onlyCriticalSeverity != onlyCriticalSeverityNew || onlyHighSeverityOrAbove != onlyHighSeverityOrAboveNew || onlyMediumSeverityOrAbove != onlyMediumSeverityOrAboveNew || onlyLowSeverityOrAbove != onlyLowSeverityOrAboveNew || onlyLowSeverityOrAbove != onlyLowSeverityOrAboveNew || minCvss != minCvssNew || minEpss != minEpssNew) {
+                    document.getElementById("apply-settings").removeAttribute("disabled");
+                }
+                else {
+                    document.getElementById("apply-settings").setAttribute("disabled", "");
+                }
+            }
+            else {
+                if (doEnrichment != doEnrichmentNew || onlyCriticalSeverity != onlyCriticalSeverityNew || onlyHighSeverityOrAbove != onlyHighSeverityOrAboveNew || onlyMediumSeverityOrAbove != onlyMediumSeverityOrAboveNew || onlyLowSeverityOrAbove != onlyLowSeverityOrAboveNew || onlyLowSeverityOrAbove != onlyLowSeverityOrAboveNew || minCvss != minCvssNew) {
+                    document.getElementById("apply-settings").removeAttribute("disabled");
+                }
+                else {
+                    document.getElementById("apply-settings").setAttribute("disabled", "");
+                }
+
+            }
+        }
+
         const enrichCheck = document.getElementById('enrich-check');
         enrichCheck.addEventListener('change', function() {
             if (this.checked) {
-                doEnrichment = true;
-                parseFile();
+                doEnrichmentNew = true;
             } else {
-                doEnrichment = false;
-                parseFile();
+                doEnrichmentNew = false;
             }
+            if (doEnrichmentNew) {
+                document.getElementById("cisa-kev-check").removeAttribute("disabled");
+                document.getElementById("epssRangeInput").removeAttribute("disabled");
+                document.getElementById("min-epss-label").style.color = "black";
+                document.getElementById("epssRangeValue").style.color = "black";
+                document.getElementById("epss-fixed-text").style.color = "black";
+            }
+            else {
+                document.getElementById("cisa-kev-check").setAttribute("disabled", "");
+                document.getElementById("epssRangeInput").setAttribute("disabled", "");
+                document.getElementById("min-epss-label").style.color = "grey";
+                document.getElementById("epssRangeValue").style.color = "grey";
+                document.getElementById("epss-fixed-text").style.color = "grey";
+
+            }
+            checkSettingsHaveChanged();
+        });
+
+        const cisaKevCheck = document.getElementById('cisa-kev-check');
+        cisaKevCheck.addEventListener('change', function() {
+            if (this.checked) {
+                onlyInCisaKevNew = true;
+            } else {
+                onlyInCisaKevNew = false;
+            }
+            checkSettingsHaveChanged();
+        });
+
+        function handleSeveritySwitchChange(radio) {
+            onlyCriticalSeverityNew = false;
+            onlyHighSeverityOrAboveNew = false;
+            onlyMediumSeverityOrAboveNew = false;
+            onlyLowSeverityOrAboveNew = false;
+            if (radio.value == "severity-critical") {
+                onlyCriticalSeverityNew = true;
+            }
+            else if (radio.value == "severity-high") {
+                onlyHighSeverityOrAboveNew = true;
+            }
+            else if (radio.value == "severity-medium") {
+                onlyMediumSeverityOrAboveNew = true;
+            }
+            else if (radio.value == "severity-low") {
+                onlyLowSeverityOrAboveNew = true;
+            }
+            checkSettingsHaveChanged();
+        }
+
+        function handleCvssChange(cvssValue) {
+            minCvssNew = cvssValue;
+            checkSettingsHaveChanged();
+        }
+
+        function handleEpssChange(epssValue) {
+            minEpssNew = epssValue;
+            checkSettingsHaveChanged();
+        }
+
+        const applySettings = document.getElementById("apply-settings");
+        applySettings.addEventListener("click", function() {
+            doEnrichment = doEnrichmentNew;
+            onlyInCisaKev = onlyInCisaKevNew;
+            onlyCriticalSeverity = onlyCriticalSeverityNew;
+            onlyHighSeverityOrAbove = onlyHighSeverityOrAboveNew;
+            onlyMediumSeverityOrAbove = onlyMediumSeverityOrAboveNew;
+            onlyLowSeverityOrAbove = onlyLowSeverityOrAboveNew;
+            onlyLowSeverityOrAbove = onlyLowSeverityOrAboveNew;
+            minCvss = minCvssNew;
+            minEpss = minEpssNew;
+            parseFile();
+            document.getElementById("apply-settings").setAttribute("disabled", "");
         });
 
         function parseFile() {
@@ -704,7 +924,6 @@
         }
 
         function showWarningIfChartWasNotCreated() {
-
             var chartContainerInnerDivOnlyVuln = document.getElementById("chart-container-only-vulnerable-inner");
             hideDiv("chart-container-only-vulnerable-inner");
             hideDiv("chart-container-inner")
@@ -737,6 +956,13 @@
                 pyodideInstance.globals.set("__name__", "__web__");
                 pyodideInstance.globals.set("INPUT_DATA", data);
                 pyodideInstance.globals.set("DO_ENRICHMENT", doEnrichment);
+                pyodideInstance.globals.set("ONLY_IN_CISA_KEV", onlyInCisaKev);
+                pyodideInstance.globals.set("ONLY_CRITICAL_SEVERITY", onlyCriticalSeverity);
+                pyodideInstance.globals.set("ONLY_HIGH_SEVERITY_OR_ABOVE", onlyHighSeverityOrAbove);
+                pyodideInstance.globals.set("ONLY_MEDIUM_SEVERITY_OR_ABOVE", onlyMediumSeverityOrAbove);
+                pyodideInstance.globals.set("ONLY_LOW_SEVERITY_OR_ABOVE", onlyLowSeverityOrAbove);
+                pyodideInstance.globals.set("MIN_CVSS", minCvss);
+                pyodideInstance.globals.set("MIN_EPSS", minEpss);
 
                 var result = await pyodideInstance.runPythonAsync(pythonScript);
                 writeToLog("Execution complete!");
