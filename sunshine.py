@@ -887,6 +887,8 @@ def get_bom_ref(component_json, all_bom_refs):
         bom_ref = component_json["bom-ref"]
         return bom_ref
     else:
+        if 'version' not in component_json:
+            component_json['version'] = ""
         bom_ref_cache_key = f"{component_json['name']} - {component_json['version']}"
         if bom_ref_cache_key in bom_ref_cache:
             return bom_ref_cache[f"{component_json['name']} - {component_json['version']}"]
@@ -924,10 +926,10 @@ def get_bom_ref(component_json, all_bom_refs):
             guessed_name_03 = f'{component_json["name"]}:{component_json["version"]}'
 
             for test in [guessed_name_01, guessed_name_02, guessed_name_03]:
-                if f"/{test}:" in bom_ref:
+                if f"/{test}:" in potential_bom_ref:
                     number_of_results += 1
                     result = potential_bom_ref
-                elif f":{test}:" in bom_ref:
+                elif f":{test}:" in potential_bom_ref:
                     number_of_results += 1
                     result = potential_bom_ref
         if number_of_results == 1:  # I want just one result, otherwise it means the sbom is ambiguous and I can't make any educated guess
@@ -1400,6 +1402,8 @@ def prepare_chart_element_name(component):
     if len(component["vulnerabilities"]) > 0:
         name += "<br><br>Vulnerabilities:<br>"
 
+        name += "<ul style='margin-bottom: 0'>"
+
         vulns = {}
         for vulnerability in component["vulnerabilities"]:
             vulns[f'<li>{html.escape(vulnerability["id"])} ({html.escape(vulnerability["severity"].title())})</li>'] = VALID_SEVERITIES[vulnerability["severity"]]
@@ -1411,13 +1415,15 @@ def prepare_chart_element_name(component):
             vulns_to_be_shown = vulns_to_be_shown[:10]
             vulns_to_be_shown.append("<li>...</li>")
 
-
         name += "".join(vulns_to_be_shown)
+        name += "</ul>"
 
     if len(component["license"]) > 0:
         if len(component["vulnerabilities"]) == 0:
             name += "<br>"
         name += "<br>License:<br>"
+
+        name += "<ul style='margin-bottom: 0'>"
 
         licenses = []
         for license in component["license"]:
@@ -1428,6 +1434,7 @@ def prepare_chart_element_name(component):
             licenses.append("<li>...</li>")
 
         name += "".join(licenses)
+        name += "</ul>"
 
     return name
 
