@@ -2174,8 +2174,6 @@ def main_cli(input_file_path, output_file_path, enrich_cves, segment_limit, only
         custom_print(f"File does not exist: '{input_file_path}'")
         exit()
 
-    components, metadata_info = parse_file(input_file_path, enrich_cves, only_in_cisa_kev, only_critical_severity, only_high_severity_or_above, only_medium_severity_or_above, only_low_severity_or_above, min_cvss, min_epss)
-
     try:
         components, metadata_info = parse_file(input_file_path, enrich_cves, only_in_cisa_kev, only_critical_severity, only_high_severity_or_above, only_medium_severity_or_above, only_low_severity_or_above, min_cvss, min_epss)
     except Exception as e:
