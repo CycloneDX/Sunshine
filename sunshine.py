@@ -370,6 +370,13 @@ HTML_TEMPLATE = """
             <li><b>Yellow:</b>low.</li>  
             <li><b>Green:</b>informational.</li> 
         </ul>
+        <br>
+        The "Depth" column indicates a component's position in the dependency graph:
+        <ul>
+            <li>A <b>"root"</b> value means it is a root component, meaning it resides in the innermost circle of the chart.</li>
+            <li>An <b>integer</b> value represents the component's depth level within the dependency chain.</li>
+        </ul>
+        <i>Note: since a single component may be a dependency for multiple components in different places in the dependency graph, it may be associated with multiple depths.</i>
         <hr><br>
             <div id="table-container-inner">
                 <table id="components-table" class="table table-striped table-bordered" style="width:100%"><COMPONENTS_TABLE_HERE></table>
@@ -1352,6 +1359,9 @@ def parse_json_data(data, enrich_cves, only_in_cisa_kev, only_critical_severity,
         for vulnerability in data["vulnerabilities"]:
             vuln_id, vuln_severity, vuln_score, vuln_vector = parse_vulnerability_data(vulnerability)
 
+            if "affects" not in vulnerability:
+                continue
+
             for affects in vulnerability["affects"]:
                 bom_ref = affects["ref"]
                 if bom_ref not in components:
@@ -1466,6 +1476,7 @@ class ChildrenGatherer:
         self.SEGMENTS_THRESHOLD = 100000
 
     def get_children(self, components, component, parents):
+        
         children = []
         value = 0
         has_vulnerable_children_or_is_vulnerable = False
@@ -1476,6 +1487,9 @@ class ChildrenGatherer:
             child_name = prepare_chart_element_name(components[depends_on])
             child_component = components[depends_on]
             child_component["visited"] = True
+            if "depth" not in child_component:
+                child_component["depth"] = set()
+            child_component["depth"].add(len(parents_branch))
             if depends_on not in parents_branch:  # this is done to avoid infinite recursion in case of circular dependencies
                 parents_branch.append(depends_on)
                 child_children, children_value, has_vulnerable_children_or_is_vulnerable = self.get_children(components, child_component, parents_branch)
@@ -1523,6 +1537,11 @@ class ChildrenGatherer:
 
 def add_root_component(components, component, data, bom_ref):
     component["visited"] = True
+
+    if "depth" not in component:
+        component["depth"] = set()
+    component["depth"].add(-1)
+
     parents = [bom_ref]
     root_name = prepare_chart_element_name(component)
 
@@ -1623,6 +1642,7 @@ def build_components_table_content(components):
     rows = ["""<thead>
         <tr>
             <th>Component</th>
+            <th>Depth</th>
             <th>Depends on</th>
             <th>Dependency of</th>
             <th>Direct <br>vulnerabilities</th>
@@ -1631,6 +1651,7 @@ def build_components_table_content(components):
         </tr>
         <tr>
             <th><input type="text" placeholder="Search Component" class="form-control search-in-table-comp"></th>
+            <th><input type="text" placeholder="Search Depth" class="form-control search-in-table-comp"></th>
             <th><input type="text" placeholder="Search Depends on" class="form-control search-in-table-comp"></th>
             <th><input type="text" placeholder="Search Dependency of" class="form-control search-in-table-comp"></th>
             <th><input type="text" placeholder="Search Direct vulnerabilities" class="form-control search-in-table-comp"></th>
@@ -1644,6 +1665,16 @@ def build_components_table_content(components):
 
         new_row += "<td>" + component_badge_for_table(component) + "</td>"
 
+        if "depth" in component:
+            depths_strings = []
+            for depth_level in sorted(component["depth"]):
+                if depth_level == -1:
+                    depths_strings.append("root")
+                else:
+                    depths_strings.append(f"{depth_level}")
+            new_row += "<td>" + ", ".join(depths_strings) + "</td>"
+        else:
+            new_row += "<td>-</td>"
 
         if len(component["depends_on"]) == 0:
             new_row += "<td>-</td>"
@@ -2084,34 +2115,30 @@ def parse_vulnerabilities(components, enrich_cves):
     return vulnerabilities, counter_critical, counter_high, counter_medium, counter_low, counter_info
 
 
-def purge_components(components):
-    already_seen = {}
-    doubles = {}
-    # 1) passes them all and keeps track of duplicate bom-refs with respect to the group-name-version pair; each time it finds a duplicate it also saves the unique bom-ref that will survive
+def de_duplicate_labels(components):
+    # 1) check them all and keeps track of bom-refs with respect to the name-version pair
+    
+    already_seen = {}  # key: name+version, value: set of bom-refs with specified name-version
+
     for bom_ref, component in components.items():
         current_id = component["name"] if "name" in component else "-"
         current_id += "--"
         current_id += component["version"] if "version" in component else "-"
-        current_id += "--"
-        current_id += component["group"] if "group" in component else "-"
-        if current_id in already_seen:
-            doubles[bom_ref] = already_seen[current_id]
-        else:
-            already_seen[current_id] = bom_ref
+        if current_id not in already_seen:
+            already_seen[current_id] = set()
+        already_seen[current_id].add(bom_ref)
 
-    # 2) deletes from "components" entries with duplicate bom-refs
-    for double_bom_ref in doubles:
-        del components[double_bom_ref]
+    # 2) fix duplicates
 
-    # 3) passes all remaining "components" again and in all "dependency_of" and "depends_on" fields replaces the old bom-refs with the new ones (keeping only one copy, if the new one was already present)
-    for double_bom_ref, original_bom_ref in doubles.items():
-        for _, component in components.items():
-            if double_bom_ref in component["dependency_of"]:
-                component["dependency_of"].remove(double_bom_ref)
-                component["dependency_of"].add(original_bom_ref)
-            if double_bom_ref in component["depends_on"]:
-                component["depends_on"].remove(double_bom_ref)
-                component["depends_on"].add(original_bom_ref)
+    for current_id, bom_refs in already_seen.items():
+        if len(bom_refs) == 1:  # not a duplicate
+            continue
+
+        for bom_ref in bom_refs:
+            if components[bom_ref]["version"] != "-":
+                components[bom_ref]["version"] = f'{components[bom_ref]["version"]} ({bom_ref})'
+            else:
+                components[bom_ref]["version"] = bom_ref
 
 
 def augment_components_data(components):
@@ -2147,13 +2174,15 @@ def main_cli(input_file_path, output_file_path, enrich_cves, segment_limit, only
         custom_print(f"File does not exist: '{input_file_path}'")
         exit()
 
+    components, metadata_info = parse_file(input_file_path, enrich_cves, only_in_cisa_kev, only_critical_severity, only_high_severity_or_above, only_medium_severity_or_above, only_low_severity_or_above, min_cvss, min_epss)
+
     try:
         components, metadata_info = parse_file(input_file_path, enrich_cves, only_in_cisa_kev, only_critical_severity, only_high_severity_or_above, only_medium_severity_or_above, only_low_severity_or_above, min_cvss, min_epss)
     except Exception as e:
         custom_print(f"Error parsing input file: {e}")
         exit()
 
-    purge_components(components)
+    de_duplicate_labels(components)
 
     create_with_charts = True
 
@@ -2214,7 +2243,7 @@ def main_web(input_string, enrich_cves, only_in_cisa_kev, only_critical_severity
         custom_print(f"Error parsing input string: {e}")
         exit()
 
-    purge_components(components)
+    de_duplicate_labels(components)
 
     create_with_charts = True
 

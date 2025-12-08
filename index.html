@@ -377,6 +377,13 @@
         <li><b>Yellow:</b>low.</li>  
         <li><b>Green:</b>informational.</li> 
     </ul>
+    <br>
+    The "Depth" column indicates a component's position in the dependency graph:
+    <ul>
+        <li>A <b>"root"</b> value means it is a root component, meaning it resides in the innermost circle of the chart.</li>
+        <li>An <b>integer</b> value represents the component's depth level within the dependency chain.</li>
+    </ul>
+    <i>Note: since a single component may be a dependency for multiple components in different places in the dependency graph, it may be associated with multiple depths.</i>
     <hr><br>
         <div id="table-container-inner">
             <table id="components-table" class="table table-striped table-bordered" style="width:100%"></table>
