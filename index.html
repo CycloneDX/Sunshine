@@ -22,60 +22,72 @@
     <script src="https://fastly.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
 
     <style>
+
+        :root { 
+            --floating-grey: #64748b;
+            --dark-blue: #032c57;
+            --medium-blue: #1c538e;
+            --light-blue: #9fc5e8;
+            --almost-white: #baccde;
+            --dark-red: #a10a0a;
+            --orange: #ff9335;
+            --yellow: #fccd58;
+        }
+
         body {
             margin: 20px;
             height: 100vh;
-            background: linear-gradient(to right, #032c57, #1C538E);
+            background: linear-gradient(to right, var(--dark-blue), var(--medium-blue));
         }
         #output {
             white-space: pre-line;
-            background-color: #ffffff;
+            background-color: white;
             padding: 10px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--almost-white);
             border-radius: 4px;
             margin-top: 10px;
             font-family: "Courier New", "Lucida Console", monospace;
         }
 
         #chart-container {
-            background-color: #ffffff;
+            background-color: white;
             padding: 10px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--almost-white);
             border-radius: 4px;
             position: relative;
         }
 
         #chart-container-inner, #chart-container-only-vulnerable-inner {
-            background-color: #ffffff;
+            background-color: white;
             padding: 10px;
             position: relative;
             height: 90vh;
             overflow: hidden;
         }
         #chart-container-placeholder {
-            background-color: #fffffF;
+            background-color: white;
             padding: 10px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--almost-white);
             border-radius: 4px;
         }
 
         #table-container, #info-table-container, #vulnerabilities-table-container {
-            background-color: #fffffF;
+            background-color: white;
             padding: 10px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--almost-white);
             border-radius: 4px;
         }
         #table-container-placeholder, #info-table-container-placeholder, #vulnerabilities-table-container-placeholder {
-            background-color: #fffffF;
+            background-color: white;
             padding: 10px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--almost-white);
             border-radius: 4px;
         }
 
         #upload-file-container {
-            background-color: #fffffF;
+            background-color: white;
             padding: 10px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--almost-white);
             border-radius: 4px;
         }
 
@@ -95,19 +107,19 @@
             padding-bottom: 10px !important;
         }
         .light-text {
-            color: #baccde;
+            color: var(--almost-white);
         }
 
         .dt-buttons {
             float: right;
         }
         .active>.page-link, .page-link.active {
-            background-color: #1C538E !important;
+            background-color: var(--medium-blue) !important;
             color: white !important;
         }
 
         .page-link {
-            color: #1C538E;
+            color: var(--medium-blue);
         }
 
         #components-table_paginate, #vulnerabilities-table_paginate {
@@ -116,22 +128,22 @@
         }
 
         .bg-dark-red {
-            background-color: #a10a0a;
+            background-color: var(--dark-red);
             color: white;
         }
 
         .bg-orange {
-            background-color: #ff9335;
+            background-color: var(--orange);
             color: white;
         }
 
         .bg-yellow {
-            background-color: #fccd58;
+            background-color: var(--yellow);
             color: white;
         }
 
         .bg-light-blue {
-            background-color: #9fc5e8;
+            background-color: var(--light-blue);
             color: black;
         }
 
@@ -140,14 +152,14 @@
             bottom: 0;
             left: 0;
             width: 100%;
-            background-color: #032c57;
-            color: #baccde;
+            background-color: var(--dark-blue);
+            color: var(--almost-white);
             text-align: center;
             z-index: 100000;
         }
 
         #footer a {
-            color: #baccde;
+            color: var(--almost-white);
         }
 
         #info-table_paginate, #info-table_length, #info-table_info {
@@ -156,6 +168,10 @@
 
         .opaque {
             opacity: 0.5;
+        }
+
+        .no-pointer-events {
+            pointer-events: none !important;
         }
 
         @media print {
@@ -169,6 +185,35 @@
             font-size:8pt; 
             color: grey;
         }
+
+        #sql-badge {
+            position: fixed; bottom: 3px; right: 18px;
+            width: 60px; height: 60px; background: var(--floating-grey);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 1050; transition: transform 0.2s;
+        }
+
+        #sql-badge:hover { transform: scale(1.1); background: var(--floating-grey); }
+        #sql-badge svg { width: 28px; height: 28px; fill: white; }
+
+        .modal-body { display: flex; flex-direction: column; gap: 1rem; }
+        textarea { font-family: 'Courier New', monospace; background: #fdfdfd; resize: none; }
+        
+        #terminal-output { 
+            background: #f1f5f9; 
+            border: 1px solid #dee2e6; 
+            padding: 1rem; 
+            min-height: 200px;
+            max-height: 300px;
+            overflow: auto; 
+            white-space: pre; 
+            font-size: 13px;
+            color: #334155;
+            border-radius: 4px;
+        }
+        .label-sm { color: #6c757d; font-size: 0.75rem; text-transform: uppercase; font-weight: bold; }
+        #status { transition: opacity 0.3s ease; }
     
     </style>
 </head>
@@ -543,6 +588,27 @@
             div.style.display = "none";
         }
 
+        function enableDiv(divId) {
+            var div = document.getElementById(divId);
+            if (div.classList.contains("opaque")) {
+              div.classList.remove("opaque");
+            }
+            if (div.classList.contains("no-pointer-events")) {
+              div.classList.remove("no-pointer-events");
+            }
+        }
+
+        function disableDiv(divId) {
+            var div = document.getElementById(divId);
+            if (!div.classList.contains("opaque")) {
+              div.classList.add("opaque");
+            }
+            if (!div.classList.contains("no-pointer-events")) {
+              div.classList.add("no-pointer-events");
+            }
+        }
+
+
         function handleShowComponentsSwitchChange(radio) {
             if (radio.value == "allComponents") {
                 hideDiv("chart-container-only-vulnerable-inner");
@@ -707,6 +773,7 @@
             showDiv("vulnerabilities-table-container-placeholder");
             hideDiv("info-table-container");
             showDiv("info-table-container-placeholder");
+            disableDiv("sql-badge");
             writeToLog("~~~~~~~~~~~~~~~ New file selected ~~~~~~~~~~~~~~~");
             var reader = new FileReader();
             reader.onload = function(e) {
@@ -1011,10 +1078,174 @@
                     await compressAndEncode(data);
                 }*/
                 turnChartIntoImageIfTooManySegments();
+                document.getElementById('terminal-output').innerText = "System ready. Click RUN to query data.";
+                enableDiv("sql-badge");
 
                 writeToLog("Finished.");
             }
         }
+    </script>
+
+    <div id="sql-badge" data-bs-toggle="modal" data-bs-target="#sqlModal" title="Open Query my SBOM" class="opaque no-pointer-events">
+        <span style="color: white; font-size: 9pt; margin-bottom: 7px;">&lt;/&gt;</span>
+        <svg viewBox="0 0 24 24" style="margin-bottom: 11px;">
+            <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+        </svg>
+    </div>
+
+    <div class="modal fade" id="sqlModal" tabindex="-1" aria-labelledby="sqlModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="sqlModalLabel">Query my SBOM</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div>Here you can query your SBOM using SQL. The available tables and columns are the same shown in the UI, which means they are:
+                            <ul>
+                                <li style="margin-top: 10px; margin-bottom: 10px;">Components:<br><span class="badge border border-dark text-dark">Component</span> <span class="badge border border-dark text-dark">Depth</span> <span class="badge border border-dark text-dark">Depends on</span> <span class="badge border border-dark text-dark">Dependency of</span> <span class="badge border border-dark text-dark">Direct vulnerabilities</span> <span class="badge border border-dark text-dark">Transitive vulnerabilities</span> <span class="badge border border-dark text-dark">License</span></li>
+                                <li>Vulnerabilities:<br><span class="badge border border-dark text-dark">Vulnerability</span> <span class="badge border border-dark text-dark">Severity</span> <span class="badge border border-dark text-dark">Score</span> <span class="badge border border-dark text-dark">Vector </span> <span class="badge border border-dark text-dark">EPSS</span> <span class="badge border border-dark text-dark">CISA KEV Date</span> <span class="badge border border-dark text-dark">Directly vulnerable components</span> <span class="badge border border-dark text-dark">Transitively vulnerable components</span><br><i style="font-size: 10pt;">Note: "EPSS" and "CISA KEV Date" columns are available only if "Enrich data with EPSS and CISA KEV" is selected in settings.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="label-sm">SQL Query</label>
+                        <textarea id="sqlInput" class="form-control" rows="2">SELECT * FROM Components WHERE "Direct vulnerabilities" &lt;&gt; '-'</textarea>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2">
+                        <button id="runBtn" class="btn btn-success" style="margin: 10px;" disabled>Run SQL</button>
+                        <button id="downloadBtn" class="btn btn-primary" disabled>Export CSV</button>
+                        <span id="status" class="text-muted small ms-2">Loading Engine...</span>
+                    </div>
+
+                    <div><pre id="terminal-output">Initializing...</pre></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import * as duckdb from 'https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.28.0/+esm';
+
+        let db;
+        const downloadBtn = document.getElementById('downloadBtn');
+        const statusEl = document.getElementById('status');
+
+        function formatTable(rows) {
+            if (!rows.length) return "Empty set";
+            const keys = Object.keys(rows[0]);
+            const widths = keys.reduce((acc, k) => {
+                acc[k] = Math.max(k.length, ...rows.map(r => String(r[k]).length));
+                return acc;
+            }, {});
+            const sep = "+" + keys.map(k => "-".repeat(widths[k] + 2)).join("+") + "+";
+            const head = "|" + keys.map(k => " " + k.padEnd(widths[k]) + " ").join("|") + "|";
+            const body = rows.map(r => "|" + keys.map(k => " " + String(r[k] ?? '').padEnd(widths[k]) + " ").join("|") + "|").join("\n");
+            return `${sep}\n${head}\n${sep}\n${body}\n${sep}\n${rows.length} rows in set`;
+        }
+
+        async function initDB() {
+            try {
+                const JSDELIVR_BUNDLES = duckdb.getJsDelivrBundles();
+                const bundle = await duckdb.selectBundle(JSDELIVR_BUNDLES);
+                const worker_url = URL.createObjectURL(new Blob([`importScripts("${bundle.mainWorker}");`], {type: 'text/javascript'}));
+                const worker = new Worker(worker_url);
+                db = new duckdb.AsyncDuckDB(new duckdb.ConsoleLogger(), worker);
+                await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
+                URL.revokeObjectURL(worker_url);
+                
+                // Hide status and enable Run button
+                statusEl.style.display = 'none'; 
+                document.getElementById('runBtn').disabled = false;
+                document.getElementById('terminal-output').innerText = "System ready. Click RUN to query data.";
+            } catch (err) {
+                statusEl.innerText = "Error: " + err.message;
+                statusEl.classList.add('text-danger');
+            }
+        }
+
+        function getTableAsCsv(tableId) {
+            var table = $('#'+tableId).DataTable();
+
+            var exportParams = {
+                modifier: {
+                    page: 'all'
+                }
+            };
+            var data = table.buttons.exportData(exportParams);
+
+            var csvString = data.header.join(',') + '\n';
+            data.body.forEach(function(row) {
+                csvString += row.map(val => `"${val}"`).join(',') + '\n';
+            });
+            return csvString
+        }
+
+        document.getElementById('runBtn').onclick = async () => {
+            // Disable export immediately when a new run starts
+            downloadBtn.disabled = true;
+
+            const conn = await db.connect();
+
+            await db.registerFileBuffer('components.csv', new TextEncoder().encode(getTableAsCsv('components-table')));
+            await conn.query(`DROP TABLE IF EXISTS Components;`);
+            await conn.insertCSVFromPath('components.csv', {
+                schema: 'main',
+                name: 'Components',
+                header: true,
+                detect: true
+            });
+            await db.dropFile('components.csv');
+
+            await db.registerFileBuffer('vulnerabilities.csv', new TextEncoder().encode(getTableAsCsv('vulnerabilities-table')));
+            await conn.query(`DROP TABLE IF EXISTS Vulnerabilities;`);
+            await conn.insertCSVFromPath('vulnerabilities.csv', {
+                schema: 'main',
+                name: 'Vulnerabilities',
+                header: true,
+                detect: true
+            });
+            await db.dropFile('vulnerabilities.csv');
+
+            try {
+                const result = await conn.query(document.getElementById('sqlInput').value);
+                const rows = result.toArray().map(r => {
+                    const o = r.toJSON();
+                    for (let k in o) if (typeof o[k] === 'bigint') o[k] = o[k].toString();
+                    return o;
+                });
+                
+                document.getElementById('terminal-output').innerText = formatTable(rows);
+                
+                // Only enable export if rows exist
+                if (rows.length > 0) {
+                    downloadBtn.disabled = false;
+                }
+            } catch (e) {
+                document.getElementById('terminal-output').innerText = "Error: " + e.message;
+                downloadBtn.disabled = true; // Ensure disabled on error
+            }
+            await conn.close();
+        };
+
+        downloadBtn.onclick = async () => {
+            const conn = await db.connect();
+            try {
+                await conn.query(`COPY (${document.getElementById('sqlInput').value}) TO 'out.csv' (HEADER)`);
+                const buffer = await db.copyFileToBuffer('out.csv');
+                const url = URL.createObjectURL(new Blob([buffer], {type: 'text/csv'}));
+                const a = document.createElement('a');
+                a.href = url; a.download = 'export.csv'; a.click();
+            } catch (e) {
+                alert("Export failed: " + e.message);
+            }
+            await conn.close();
+        };
+
+        initDB();
     </script>
 </body>
 </html>
