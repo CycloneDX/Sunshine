@@ -211,6 +211,7 @@
             font-size: 13px;
             color: #334155;
             border-radius: 4px;
+            font-style: normal;
         }
         .label-sm { color: #6c757d; font-size: 0.75rem; text-transform: uppercase; font-weight: bold; }
         #status { transition: opacity 0.3s ease; }
@@ -1179,7 +1180,9 @@
 
             var csvString = data.header.join(',') + '\n';
             data.body.forEach(function(row) {
-                csvString += row.map(val => `"${val}"`).join(',') + '\n';
+                csvString += row
+                        .map(val => `"${String(val).replace(/"/g, '""')}"`)
+                        .join(',') + '\n';
             });
             return csvString
         }
