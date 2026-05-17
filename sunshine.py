@@ -756,9 +756,9 @@ def create_fake_component(bom_ref):
 
 
 def create_base_component(component):
-    new_component = {"name": component["name"],
-                     "version": component["version"] if "version" in component else "-",
-                     "type": component["type"] if "type" in component else "-",
+    new_component = {"name": component["name"].strip(),
+                     "version": component["version"].strip() if "version" in component else "-",
+                     "type": component["type"].strip() if "type" in component else "-",
                      "license": parse_licenses(component),
                      "depends_on": set(),
                      "dependency_of": set(),
@@ -1289,6 +1289,7 @@ def parse_json_data(data, enrich_cves, only_in_cisa_kev, only_critical_severity,
                 new_component = create_base_component(component)
                 bom_ref = get_bom_ref(component, all_bom_refs)
                 components[bom_ref] = new_component
+                add_nested_components(component, components, all_bom_refs)
 
     metadata_info = parse_metadata(data)
 
@@ -2158,9 +2159,9 @@ def de_duplicate_labels(components):
     already_seen = {}  # key: name+version, value: set of bom-refs with specified name-version
 
     for bom_ref, component in components.items():
-        current_id = component["name"] if "name" in component else "-"
+        current_id = component["name"] if "name" in component and component["name"] != "" else "-"
         current_id += "--"
-        current_id += component["version"] if "version" in component else "-"
+        current_id += component["version"] if "version" in component and component["version"] != "" else "-"
         if current_id not in already_seen:
             already_seen[current_id] = set()
         already_seen[current_id].add(bom_ref)
@@ -2172,10 +2173,10 @@ def de_duplicate_labels(components):
             continue
 
         for bom_ref in bom_refs:
-            if components[bom_ref]["version"] != "-":
+            if components[bom_ref]["version"] not in ["-", ""]:
                 components[bom_ref]["version"] = f'{components[bom_ref]["version"]} ({bom_ref})'
             else:
-                components[bom_ref]["version"] = bom_ref
+                components[bom_ref]["version"] = f"({bom_ref})"
 
 
 def augment_components_data(components):
