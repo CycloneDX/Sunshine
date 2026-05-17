@@ -952,12 +952,15 @@ def get_bom_ref(component_json, all_bom_refs):
 def create_or_update_bom_ref_entry(bom_refs, component):
     if component["bom-ref"] not in bom_refs:
         bom_refs[component["bom-ref"]] = {"name": component["name"] if "name" in component else "-", 
-                                          "version": component["version"] if "version" in component else "-"}
+                                          "version": component["version"] if "version" in component else "-",
+                                          "purl": component["purl"] if "purl" in component else "-"}
     else:
         if bom_refs[component["bom-ref"]]["name"] == "-" and "name" in component:
             bom_refs[component["bom-ref"]]["name"] = component["name"]
         if bom_refs[component["bom-ref"]]["version"] == "-" and "version" in component:
             bom_refs[component["bom-ref"]]["version"] = component["version"]
+        if bom_refs[component["bom-ref"]]["purl"] == "-" and "purl" in component:
+            bom_refs[component["bom-ref"]]["purl"] = component["purl"]
 
 
 def normalize_bom_ref(bom_refs, bom_ref, only_valid_components=True):
@@ -970,6 +973,10 @@ def normalize_bom_ref(bom_refs, bom_ref, only_valid_components=True):
                 return bom_ref
 
     for component_bom_ref, component_data in bom_refs.items():
+        # look with purl
+        if "purl" in component_data and component_data["purl"] != "-" and bom_ref == component_data["purl"]:
+            return component_bom_ref
+
         # look with version
         guessed_name_01 = f'{component_data["name"]}@{component_data["version"]}'
         guessed_name_02 = f'{component_data["name"]}::{component_data["version"]}'
@@ -1385,8 +1392,18 @@ def parse_json_data(data, enrich_cves, only_in_cisa_kev, only_critical_severity,
             for affects in vulnerability["affects"]:
                 bom_ref = affects["ref"]
                 if bom_ref not in components:
-                    custom_print(f"WARNING: 'ref' '{bom_ref}' is used in 'vulnerabilities' but it's not declared in 'components'. I'll create a fake one.")
-                    components[bom_ref] = create_fake_component(bom_ref)
+                    if bom_ref in guessed_bom_refs_cache:
+                        bom_ref = guessed_bom_refs_cache[bom_ref]
+                    else:
+                        custom_print(f"WARNING: 'ref' '{bom_ref}' is used in 'vulnerabilities' in a 'ref' field but it's not declared in 'components'. I'll search for a match...")
+                        guessed_bom_ref = normalize_bom_ref(all_bom_refs, bom_ref)
+                        guessed_bom_refs_cache[bom_ref] = guessed_bom_ref
+                        if guessed_bom_ref is None or guessed_bom_ref not in components:
+                            custom_print(f"Match not found. I'll create a fake one.")
+                            components[bom_ref] = create_fake_component(bom_ref)
+                        else:
+                            custom_print(f"Match found: {guessed_bom_ref}")
+                            bom_ref = guessed_bom_ref
 
                 vulnerability_data = {"id": vuln_id, "severity": vuln_severity, "score": vuln_score, "vector": vuln_vector}
 
