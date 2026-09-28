@@ -828,6 +828,7 @@ def parse_vulnerability_data(vulnerability):
                     current_vuln_score = 0.0
                     current_vuln_vector = "-"
                     current_vuln_source = "-"
+                    current_vuln_severity = "unknown"
                     if "severity" in rating and rating["severity"].lower() in VALID_SEVERITIES:
                         current_vuln_severity = rating["severity"]
                         if current_vuln_severity.lower() == "info":
@@ -972,10 +973,17 @@ def normalize_bom_ref(bom_refs, bom_ref, only_valid_components=True):
             if bom_ref == component_bom_ref and component_data["name"] != "-" and component_data["version"] != "-":
                 return bom_ref
 
+    purls_without_version = {}
     for component_bom_ref, component_data in bom_refs.items():
-        # look with purl
-        if "purl" in component_data and component_data["purl"] != "-" and bom_ref == component_data["purl"]:
-            return component_bom_ref
+        # look in purl
+        if "purl" in component_data and component_data["purl"] is not None and component_data["purl"] != "-":
+            if bom_ref == component_data["purl"]:
+                return component_bom_ref
+            if "@" in component_data["purl"]:
+                current_purl_without_version = component_data["purl"].split("@", 1)[0].strip() 
+                if component_bom_ref not in purls_without_version:
+                    purls_without_version[component_bom_ref] = set()
+                purls_without_version[component_bom_ref].add(current_purl_without_version)
 
         # look with version
         guessed_name_01 = f'{component_data["name"]}@{component_data["version"]}'
@@ -991,6 +999,12 @@ def normalize_bom_ref(bom_refs, bom_ref, only_valid_components=True):
                 return bom_ref
             if bom_ref.endswith(f":{test}:"):
                 return bom_ref
+
+    # look in purls without version, considering only unique matches
+    for component_bom_ref, current_purls_without_version in purls_without_version.items():
+        if len(current_purls_without_version) == 1:
+            if bom_ref == list(current_purls_without_version)[0]:
+                return component_bom_ref 
 
     # another try with version not in the end of the string
     number_of_results = 0
