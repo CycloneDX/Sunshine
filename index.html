@@ -20,6 +20,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <script src="https://fastly.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+    <script src="state_filter.js"></script>
 
     <style>
 
@@ -216,6 +217,22 @@
         .label-sm { color: #6c757d; font-size: 0.75rem; text-transform: uppercase; font-weight: bold; }
         #status { transition: opacity 0.3s ease; }
     
+        .state-item { display: block; }
+        .state-badge { color: #fff; }
+        .state-exploitable { background-color: #dc3545; }
+        .state-in_triage { background-color: #fd7e14; }
+        .state-unassigned { background-color: #6c757d; }
+        .state-resolved { background-color: #198754; }
+        .state-not_affected { background-color: #0d6efd; }
+        .state-false_positive { background-color: #8a949c; }
+        .state-other { background-color: #6c757d; }
+        #state-filter-container {
+            display: none;
+            background-color: #ffffff;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
@@ -344,6 +361,8 @@
 
     </div>
 
+    <br>
+    <div id="state-filter-container"></div>
     <br>
     <h3 class="light-text">Summary</h3>
     <div id="info-table-container" style="display: none">
@@ -545,7 +564,7 @@
             option = {
               tooltip: {
                     formatter: function(params) {
-                        return `${params.name}`;
+                        return sunshineFilterTooltip(params.name);
                     },
                 },
               series: {
@@ -569,6 +588,7 @@
             }
 
             window.addEventListener('resize', myChart.resize);
+            sunshineRegisterChart(chartId, data, chartId.indexOf('only-vulnerable') >= 0);
         }
 
         async function loadPyodideAndRun() {
@@ -774,6 +794,7 @@
             showDiv("vulnerabilities-table-container-placeholder");
             hideDiv("info-table-container");
             showDiv("info-table-container-placeholder");
+            document.getElementById("state-filter-container").style.display = "none";
             disableDiv("sql-badge");
             writeToLog("~~~~~~~~~~~~~~~ New file selected ~~~~~~~~~~~~~~~");
             var reader = new FileReader();
@@ -1067,6 +1088,7 @@
                 writeToLog("Building summary table...");
                 renderTable(metadataTableContent, "info-table", "info-table-container", "info-table-container-placeholder", null);
                 writeToLog("Summary table built!");
+                sunshineBuildStateFilter();
 
                 let chartWasCreated = pyodideInstance.globals.get('CHART_WAS_CREATED');
 

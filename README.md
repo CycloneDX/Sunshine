@@ -54,6 +54,12 @@ options:
 
 <br>
 
+# Vulnerability analysis state (VEX/VDR)
+
+If vulnerabilities declare `analysis.state` (`exploitable`, `in_triage`, `resolved`, `resolved_with_pedigree`, `not_affected`, `false_positive`), Sunshine shows the state, justification, response and detail (tooltip) in the vulnerabilities and components tables. All vulnerabilities are shown by default; in the generated report an "Analysis state" bar lets you untick states (e.g. resolved, not affected, false positive) to hide them from the tables, summary counters and charts. Nothing is removed from the report. The filter script `state_filter.js` must sit next to `sunshine.py` when generating reports with the CLI.
+
+<br>
+
 Credits:
 - made by: [Luca Capacci](https://www.linkedin.com/in/lucacapacci/)
 - contributor: [Mattia Fierro](https://www.linkedin.com/in/mattiafierro/)
