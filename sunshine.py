@@ -44,6 +44,19 @@ PREFERRED_VULNERABILITY_RATING_METHODS_ORDER = ["CVSSv4",
                                                 "SSVC",
                                                 "other"]
 
+# CycloneDX impactAnalysisState values, grouped for the UI toggles
+UNASSIGNED_STATE = "unassigned"
+STATE_GROUPS = {
+    "exploitable": ["exploitable"],
+    "in_triage": ["in_triage"],
+    "unassigned": [UNASSIGNED_STATE],
+    "resolved": ["resolved", "resolved_with_pedigree"],
+    "not_affected": ["not_affected"],
+    "false_positive": ["false_positive"],
+    "other": [],
+}
+STATE_TO_GROUP = {st: g for g, sts in STATE_GROUPS.items() for st in sts}
+
 VALID_SEVERITIES = {"critical": 4,
                     "high": 3,
                     "medium": 2,
@@ -282,6 +295,23 @@ HTML_TEMPLATE = """
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
+
+        .state-item { display: block; }
+        .state-badge { color: #fff; }
+        .state-exploitable { background-color: #dc3545; }
+        .state-in_triage { background-color: #fd7e14; }
+        .state-unassigned { background-color: #6c757d; }
+        .state-resolved { background-color: #198754; }
+        .state-not_affected { background-color: #0d6efd; }
+        .state-false_positive { background-color: #8a949c; }
+        .state-other { background-color: #6c757d; }
+        #state-filter-container {
+            display: none;
+            background-color: #ffffff;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
     
     </style>
 </head>
@@ -299,6 +329,8 @@ HTML_TEMPLATE = """
         <span>Analyzed CycloneDX JSON file: <i><FILE_NAME_HERE></i></span>
     </div>
 
+    <br>
+    <div id="state-filter-container"></div>
     <br>
     <h3 class="light-text">Summary</h3>
     <div id="info-table-container">
@@ -408,6 +440,9 @@ HTML_TEMPLATE = """
                 <table id="vulnerabilities-table" class="table table-striped table-bordered" style="width:100%"><VULNERABILITIES_TABLE_HERE></table>
     </div>
     <script type="text/javascript">
+<STATE_FILTER_JS_HERE>
+    </script>
+    <script type="text/javascript">
         window.addEventListener('load', function() {
           const loadingOverlay = document.getElementById('loadingOverlay');
           loadingOverlay.style.opacity = '0';
@@ -460,7 +495,7 @@ HTML_TEMPLATE = """
         option = {
           tooltip: {
                 formatter: function(params) {
-                    return `${params.name}`;
+                    return sunshineFilterTooltip(params.name);
                 },
             },
           series: {
@@ -498,7 +533,7 @@ HTML_TEMPLATE = """
         optionVuln = {
           tooltip: {
                 formatter: function(params) {
-                    return `${params.name}`;
+                    return sunshineFilterTooltip(params.name);
                 },
             },
           series: {
@@ -712,6 +747,10 @@ HTML_TEMPLATE = """
 
         turnChartIntoImageIfTooManySegments("chart-container-inner");
         <SHOW_WARNING_IF_CHART_WAS_NOT_CREATED>
+
+        sunshineRegisterChart("chart-container-inner", data, false);
+        sunshineRegisterChart("chart-container-only-vulnerable-inner", dataVuln, true);
+        sunshineBuildStateFilter();
 
 
       </script>
@@ -1225,6 +1264,32 @@ def parse_metadata(data):
     return metadata_info
 
 
+def parse_analysis(vulnerability):
+    """Extract the CycloneDX 'analysis' object. Absent state => 'unassigned'. Unknown values are kept as-is."""
+    analysis = vulnerability.get("analysis") if isinstance(vulnerability, dict) else None
+    if not isinstance(analysis, dict):
+        analysis = {}
+    state = analysis.get("state")
+    if not isinstance(state, str) or state == "":
+        state = UNASSIGNED_STATE
+    response = analysis.get("response", [])
+    if not isinstance(response, list):
+        response = [response]
+    return {
+        "state": state,
+        "justification": str(analysis.get("justification", "")),
+        "response": [str(r) for r in response],
+        "detail": str(analysis.get("detail", "")),
+        "first_issued": str(analysis.get("firstIssued", "")),
+        "last_updated": str(analysis.get("lastUpdated", "")),
+    }
+
+
+def get_state_group(state):
+    """Toggle group of a state; unknown states go to 'other'."""
+    return STATE_TO_GROUP.get(state, "other")
+
+
 def should_add_vulnerability(vulnerability_data, only_in_cisa_kev, only_critical_severity, only_high_severity_or_above, only_medium_severity_or_above, only_low_severity_or_above, min_cvss, min_epss, enrich_cves):
     if only_in_cisa_kev is False and only_critical_severity is False and only_high_severity_or_above is False and only_medium_severity_or_above is False and only_low_severity_or_above is False and min_cvss == 0.0 and min_epss == 0.00:
         return True
@@ -1347,13 +1412,13 @@ def parse_json_data(data, enrich_cves, only_in_cisa_kev, only_critical_severity,
                 for vulnerability in component["vulnerabilities"]:
                     vuln_id, vuln_severity, vuln_score, vuln_vector = parse_vulnerability_data(vulnerability)
 
-                    vulnerability_data = {"id": vuln_id, "severity": vuln_severity, "score": vuln_score, "vector": vuln_vector}
+                    vulnerability_data = {"id": vuln_id, "severity": vuln_severity, "score": vuln_score, "vector": vuln_vector, "analysis": parse_analysis(vulnerability)}
 
                     if enrich_cves is True:
                         current_epss = get_epss(vuln_id, epss_cache)
                         current_cisa_kev = get_cisa_kev(vuln_id, cisa_kev_cache)
                         vulnerability_data["epss"] = current_epss
-                        vulnerability_data["cisa_kev"] = cisa_kev
+                        vulnerability_data["cisa_kev"] = current_cisa_kev
 
                     if should_add_vulnerability(vulnerability_data, only_in_cisa_kev, only_critical_severity, only_high_severity_or_above, only_medium_severity_or_above, only_low_severity_or_above, min_cvss, min_epss, enrich_cves):
                         if vulnerability_data not in components[bom_ref]["vulnerabilities"]:
@@ -1420,7 +1485,7 @@ def parse_json_data(data, enrich_cves, only_in_cisa_kev, only_critical_severity,
                             custom_print(f"Match found: {guessed_bom_ref}")
                             bom_ref = guessed_bom_ref
 
-                vulnerability_data = {"id": vuln_id, "severity": vuln_severity, "score": vuln_score, "vector": vuln_vector}
+                vulnerability_data = {"id": vuln_id, "severity": vuln_severity, "score": vuln_score, "vector": vuln_vector, "analysis": parse_analysis(vulnerability)}
 
                 if enrich_cves is True:
                         current_epss = get_epss(vuln_id, epss_cache)
@@ -1468,7 +1533,9 @@ def prepare_chart_element_name(component):
 
         vulns = {}
         for vulnerability in component["vulnerabilities"]:
-            vulns[f'<li>{html.escape(vulnerability["id"])} ({html.escape(vulnerability["severity"].title())})</li>'] = VALID_SEVERITIES[vulnerability["severity"]]
+            state = vulnerability["analysis"]["state"]
+            state_label = "" if state == UNASSIGNED_STATE else f", {html.escape(state)}"
+            vulns[f'<li data-state="{get_state_group(state)}">{html.escape(vulnerability["id"])} ({html.escape(vulnerability["severity"].title())}{state_label})</li>'] = VALID_SEVERITIES[vulnerability["severity"]]
 
         vulns = dict(sorted(vulns.items(), key=lambda item: (-item[1], item[0])))
 
@@ -1499,6 +1566,26 @@ def prepare_chart_element_name(component):
         name += "</ul>"
 
     return name
+
+
+def severity_state_pairs(vulnerabilities):
+    """Unique [severity, state group] pairs, used client-side to honour the analysis-state toggles."""
+    pairs = []
+    for vulnerability in vulnerabilities:
+        pair = [vulnerability["severity"], get_state_group(vulnerability["analysis"]["state"])]
+        if pair not in pairs:
+            pairs.append(pair)
+    return pairs
+
+
+def chart_node(name, children, value, component):
+    return {"name": name,
+            "children": children,
+            "value": value,
+            "itemStyle": determine_style(component),
+            "dv": severity_state_pairs(component["vulnerabilities"]),
+            "tv": severity_state_pairs(component["transitive_vulnerabilities"])
+            }
 
 
 def determine_style(component):
@@ -1559,11 +1646,7 @@ class ChildrenGatherer:
 
                 value += children_value
                 
-                children.append({"name": child_name,
-                                 "children": child_children,
-                                 "value": children_value,
-                                 "itemStyle": determine_style(child_component)
-                                 })
+                children.append(chart_node(child_name, child_children, children_value, child_component))
             else:
                 custom_print(f"WARNING: component with bom-ref '{depends_on}' may be a circular dependency. Dependency chain: {format_dependency_chain(parents_branch, depends_on)}")
                 value += 1
@@ -1575,11 +1658,7 @@ class ChildrenGatherer:
                         add_transitive_vulnerabilities_to_component(child_component, child_depends_on["transitive_vulnerabilities"])
                     
 
-                children.append({"name": child_name,
-                                 "children": [],
-                                 "value": 1,
-                                 "itemStyle": determine_style(child_component)
-                                 })
+                children.append(chart_node(child_name, [], 1, child_component))
 
         if value == 0:
             value = 1
@@ -1607,11 +1686,7 @@ def add_root_component(components, component, data, bom_ref):
             add_transitive_vulnerabilities_to_component(component, child["vulnerabilities"])
             add_transitive_vulnerabilities_to_component(component, child["transitive_vulnerabilities"])
 
-    new_element = {"name": root_name,
-                   "children": root_children,
-                   "value": root_value,
-                   "itemStyle": determine_style(component)
-                   }
+    new_element = chart_node(root_name, root_children, root_value, component)
     data.append(new_element)
 
 
@@ -1653,7 +1728,10 @@ def component_badge_for_table(component):
         else:
             badge_class = 'bg-secondary'
 
-    component_on_display += f'<span class="badge {badge_class}">' + html.escape(component["name"])
+    # data-dv / data-tv let the client recompute the colour when analysis-state toggles change
+    dv = ";".join(f"{severity}:{group}" for severity, group in severity_state_pairs(component["vulnerabilities"]))
+    tv = ";".join(f"{severity}:{group}" for severity, group in severity_state_pairs(component["transitive_vulnerabilities"]))
+    component_on_display += f'<span class="badge comp-badge {badge_class}" data-dv="{dv}" data-tv="{tv}">' + html.escape(component["name"])
     if component["version"] != "-":
         component_on_display += " " + html.escape(component["version"])
     return component_on_display + "</span>"
@@ -1672,15 +1750,46 @@ def get_vulnerability_badge_by_severity(severity):
         return 'bg-success'
     return ''
 
+def state_tooltip(analysis):
+    parts = [f"State: {analysis['state']}"]
+    if analysis["justification"]:
+        parts.append(f"Justification: {analysis['justification']}")
+    if analysis["response"]:
+        parts.append(f"Response: {', '.join(analysis['response'])}")
+    if analysis["detail"]:
+        parts.append(f"Detail: {analysis['detail']}")
+    if analysis["first_issued"]:
+        parts.append(f"First issued: {analysis['first_issued']}")
+    if analysis["last_updated"]:
+        parts.append(f"Last updated: {analysis['last_updated']}")
+    return html.escape("\n".join(parts), quote=True)
+
+
+def state_badge(analysis):
+    group = get_state_group(analysis["state"])
+    return f'<span class="badge state-badge state-{group}" title="{state_tooltip(analysis)}">{html.escape(analysis["state"])}</span>'
+
+
+def render_state_items(items):
+    """items: list of (html, set_of_state_groups). Each item is a block that the client can hide by state."""
+    rendered = []
+    for index, (content, groups) in enumerate(items):
+        separator = '<span style="display: none;">, </span>' if index < len(items) - 1 else ""
+        rendered.append(f'<div class="state-item" data-state="{" ".join(sorted(groups))}">{content}{separator}</div>')
+    return "".join(rendered)
+
+
 def vulnerability_badge_for_table(component, key="vulnerabilities"):
     vulns = {}
     for vulnerability in component[key]:
         badge_class = get_vulnerability_badge_by_severity(vulnerability["severity"])
+        analysis = vulnerability["analysis"]
+        suffix = "" if analysis["state"] == UNASSIGNED_STATE else f' &#x2192; {html.escape(analysis["state"])}'
 
-        vulns[f'<span class="badge {badge_class}">{html.escape(vulnerability["severity"].title())} &#x2192; {html.escape(vulnerability["id"])}</span>'] = VALID_SEVERITIES[vulnerability["severity"]]
-    vulns = vulns = dict(sorted(vulns.items(), key=lambda item: (-item[1], item[0])))
-    vulns_to_be_shown = list(vulns.keys())
-    return vulns_to_be_shown
+        badge = f'<span class="badge {badge_class}" title="{state_tooltip(analysis)}">{html.escape(vulnerability["severity"].title())} &#x2192; {html.escape(vulnerability["id"])}{suffix}</span>'
+        vulns[badge] = (VALID_SEVERITIES[vulnerability["severity"]], {get_state_group(analysis["state"])})
+    ordered = sorted(vulns.items(), key=lambda item: (-item[1][0], item[0]))
+    return [(badge, meta[1]) for badge, meta in ordered]
 
 
 def license_badge_for_table(component):
@@ -1757,13 +1866,13 @@ def build_components_table_content(components):
             new_row += "<td>-</td>"
         else:
             vulns_to_be_shown = vulnerability_badge_for_table(component)
-            new_row += "<td>" + '<span style="display: none;">, </span><br>'.join(vulns_to_be_shown) + "</td>"
+            new_row += "<td>" + render_state_items(vulns_to_be_shown) + "</td>"
 
         if len(component["transitive_vulnerabilities"]) == 0:
             new_row += "<td>-</td>"
         else:
             vulns_to_be_shown = vulnerability_badge_for_table(component, key="transitive_vulnerabilities")
-            new_row += "<td>" + '<span style="display: none;">, </span><br>'.join(vulns_to_be_shown) + "</td>"
+            new_row += "<td>" + render_state_items(vulns_to_be_shown) + "</td>"
 
         if len(component["license"]) == 0:
             new_row += "<td>-</td>"
@@ -1916,6 +2025,9 @@ def build_vulnerabilities_table_content(vulnerabilities, components, enrich_cves
             <th>Severity</th>
             <th>Score</th>
             <th>Vector</th>
+            <th>State</th>
+            <th>Justification</th>
+            <th>Response</th>
             """
 
     if enrich_cves is True:
@@ -1928,9 +2040,12 @@ def build_vulnerabilities_table_content(vulnerabilities, components, enrich_cves
         </tr>
         <tr>
             <th><input type="text" placeholder="Search Vulnerability" class="form-control search-in-table-vuln"></th>
-            <th><input type="text" placeholder="Search Severity" class="form-control search-in-table-vuln"></th>
+            <th><select class="form-select search-select" data-filter="severity"><option value="">All</option></select></th>
             <th><input type="text" placeholder="Search Score" class="form-control search-in-table-vuln"></th>
             <th><input type="text" placeholder="Search Vector" class="form-control search-in-table-vuln"></th>
+            <th><select class="form-select search-select" data-filter="state"><option value="">All</option></select></th>
+            <th><select class="form-select search-select" data-filter="justification"><option value="">All</option></select></th>
+            <th><input type="text" placeholder="Search Response" class="form-control search-in-table-vuln"></th>
             """
 
     if enrich_cves is True:
@@ -1947,13 +2062,25 @@ def build_vulnerabilities_table_content(vulnerabilities, components, enrich_cves
     rows.append("<tbody>")
 
     for _, vulnerability in vulnerabilities.items():
-        rows.append("<tr>")
+        row_groups = set()
+        for group_map in (vulnerability["direct_groups"], vulnerability["transitive_groups"]):
+            for groups in group_map.values():
+                row_groups |= groups
+        severity_bucket = vulnerability["severity"] if vulnerability["severity"] in ("critical", "high", "medium", "low") else "info"
+        rows.append(f'<tr data-sev="{severity_bucket}" data-states="{" ".join(sorted(row_groups))}">')
         badge_class = get_vulnerability_badge_by_severity(vulnerability["severity"])
         rows.append("<td>" + f'<span class="badge {badge_class}">{html.escape(vulnerability["id"])}</span>' + "</td>")
         
         rows.append("<td>" + f'{html.escape(vulnerability["severity"].title())}' + "</td>")
         rows.append("<td>" + f'{vulnerability["score"]}' + "</td>")
         rows.append("<td>" + f'{html.escape(vulnerability["vector"])}' + "</td>")
+
+        state_items = [(state_badge(a), {get_state_group(a["state"])}) for a in vulnerability["analyses"]]
+        justification_items = [(html.escape(a["justification"]), {get_state_group(a["state"])}) for a in vulnerability["analyses"] if a["justification"]]
+        response_items = [(html.escape(", ".join(a["response"])), {get_state_group(a["state"])}) for a in vulnerability["analyses"] if a["response"]]
+        rows.append("<td>" + render_state_items(state_items) + "</td>")
+        rows.append("<td>" + (render_state_items(justification_items) if justification_items else "-") + "</td>")
+        rows.append("<td>" + (render_state_items(response_items) if response_items else "-") + "</td>")
 
         if enrich_cves is True:
             current_epss = vulnerability["epss"]
@@ -1965,25 +2092,14 @@ def build_vulnerabilities_table_content(vulnerabilities, components, enrich_cves
             if current_cisa_kev != "-":
                 kev_counter += 1
 
-        if len(vulnerability["directly_vulnerable_components"]) == 0:
-            rows.append("<td>-</td>")
-        else:
-            vulnerable_components_td = "<td>"
-            content_values = []
-            for component in vulnerability["directly_vulnerable_components"]:
-                content_values.append(component_badge_for_table(components[component]))
-            vulnerable_components_td += '<span style="display: none;">, </span><br>'.join(content_values) + "</td>"
-            rows.append(vulnerable_components_td)
-
-        if len(vulnerability["transitively_vulnerable_components"]) == 0:
-            rows.append("<td>-</td>")
-        else:
-            vulnerable_components_td = "<td>"
-            content_values = []
-            for component in vulnerability["transitively_vulnerable_components"]:
-                content_values.append(component_badge_for_table(components[component]))
-            vulnerable_components_td += '<span style="display: none;">, </span><br>'.join(content_values) + "</td>"
-            rows.append(vulnerable_components_td)
+        for components_key, groups_key in (("directly_vulnerable_components", "direct_groups"), ("transitively_vulnerable_components", "transitive_groups")):
+            if len(vulnerability[components_key]) == 0:
+                rows.append("<td>-</td>")
+            else:
+                content_values = []
+                for component in vulnerability[components_key]:
+                    content_values.append((component_badge_for_table(components[component]), vulnerability[groups_key].get(component, set())))
+                rows.append("<td>" + render_state_items(content_values) + "</td>")
 
         rows.append("</tr>")
 
@@ -2012,26 +2128,17 @@ def build_metadata_table_content(metadata_info, counter_critical, counter_high, 
     rows.append(f"<td>{len(components)}</td>")
 
     vulnerabilities_td = ""
-    if counter_critical > 0:
-        vulnerabilities_td += f'<span style="display: none;">Critical: </span><span class="badge bg-dark-red">{counter_critical}</span><span style="display: none;">, </span>&nbsp;'
-    else:
-        vulnerabilities_td += f'<span style="display: none;">Critical: </span><span class="badge bg-dark-red opaque">{counter_critical}</span><span style="display: none;">, </span>&nbsp;'
-    if counter_high > 0:
-        vulnerabilities_td += f'<span style="display: none;">High: </span><span class="badge bg-danger">{counter_high}</span><span style="display: none;">, </span>&nbsp;'
-    else:
-        vulnerabilities_td += f'<span style="display: none;">High: </span><span class="badge bg-danger opaque">{counter_high}</span><span style="display: none;">, </span>&nbsp;'
-    if counter_medium > 0:
-        vulnerabilities_td += f'<span style="display: none;">Medium: </span><span class="badge bg-orange">{counter_medium}</span><span style="display: none;">, </span>&nbsp;'
-    else:
-        vulnerabilities_td += f'<span style="display: none;">Medium: </span><span class="badge bg-orange opaque">{counter_medium}</span><span style="display: none;">, </span>&nbsp;'
-    if counter_low > 0:
-        vulnerabilities_td += f'<span style="display: none;">Low: </span><span class="badge bg-yellow">{counter_low}</span><span style="display: none;">, </span>&nbsp;'
-    else:
-        vulnerabilities_td += f'<span style="display: none;">Low: </span><span class="badge bg-yellow opaque">{counter_low}</span><span style="display: none;">, </span>&nbsp;'
-    if counter_info > 0:
-        vulnerabilities_td += f'<span style="display: none;">Information: </span><span class="badge bg-success">{counter_info}</span>'
-    else:
-        vulnerabilities_td += f'<span style="display: none;">Information: </span><span class="badge bg-success opaque">{counter_info}</span>'
+    severity_counters = [("critical", "Critical", "bg-dark-red", counter_critical),
+                         ("high", "High", "bg-danger", counter_high),
+                         ("medium", "Medium", "bg-orange", counter_medium),
+                         ("low", "Low", "bg-yellow", counter_low),
+                         ("info", "Information", "bg-success", counter_info)]
+    severity_parts = []
+    for sev_key, sev_label, sev_class, sev_counter in severity_counters:
+        opaque = "" if sev_counter > 0 else " opaque"
+        separator = "" if sev_key == "info" else '<span style="display: none;">, </span>&nbsp;'
+        severity_parts.append(f'<span style="display: none;">{sev_label}: </span><span class="badge sev-count {sev_class}{opaque}" data-sev="{sev_key}">{sev_counter}</span>{separator}')
+    vulnerabilities_td += "".join(severity_parts)
 
     if enrich_cves is True:
         vulnerabilities_td += f'<span style="display: none;">, </span><hr><i>Max EPSS</i>&nbsp;&#x2192;&nbsp;{html.escape(max_epss)}<span style="display: none;">, </span><br>'
@@ -2108,61 +2215,42 @@ def parse_vulnerabilities(components, enrich_cves):
         if len(component["vulnerabilities"]) == 0 and len(component["transitive_vulnerabilities"]) == 0:
             continue  # component is not vulnerable in any way
 
-        for vulnerability in component["vulnerabilities"]:
-            vuln_key = f"{vulnerability['id']}-{vulnerability['severity']}-{vulnerability['score']}"
+        for source_key, components_key, groups_key in (("vulnerabilities", "directly_vulnerable_components", "direct_groups"),
+                                                       ("transitive_vulnerabilities", "transitively_vulnerable_components", "transitive_groups")):
+            for vulnerability in component[source_key]:
+                vuln_key = f"{vulnerability['id']}-{vulnerability['severity']}-{vulnerability['score']}"
+                analysis = vulnerability["analysis"]
 
-            if vuln_key not in vulnerabilities:
-                vulnerabilities[vuln_key] = {"id": vulnerability['id'],
-                                             "severity": vulnerability['severity'],
-                                             "score": vulnerability['score'],
-                                             "vector": vulnerability['vector'],
-                                             "directly_vulnerable_components": set(),
-                                             "transitively_vulnerable_components": set()}
-                if enrich_cves is True:
-                    vulnerabilities[vuln_key]["epss"] = vulnerability['epss']
-                    vulnerabilities[vuln_key]["cisa_kev"] = vulnerability['cisa_kev']
+                if vuln_key not in vulnerabilities:
+                    vulnerabilities[vuln_key] = {"id": vulnerability['id'],
+                                                 "severity": vulnerability['severity'],
+                                                 "score": vulnerability['score'],
+                                                 "vector": vulnerability['vector'],
+                                                 "directly_vulnerable_components": set(),
+                                                 "transitively_vulnerable_components": set(),
+                                                 "direct_groups": {},  # bom-ref -> set of state groups (per-link state)
+                                                 "transitive_groups": {},
+                                                 "analyses": []}  # distinct analysis objects seen for this vulnerability
+                    if enrich_cves is True:
+                        vulnerabilities[vuln_key]["epss"] = vulnerability['epss']
+                        vulnerabilities[vuln_key]["cisa_kev"] = vulnerability['cisa_kev']
 
-                if vulnerability['severity'] == "critical":
-                    counter_critical += 1
-                elif vulnerability['severity'] == "high":
-                    counter_high += 1
-                elif vulnerability['severity'] == "medium":
-                    counter_medium += 1
-                elif vulnerability['severity'] == "low":
-                    counter_low += 1
-                else:
-                    counter_info += 1
+                    if vulnerability['severity'] == "critical":
+                        counter_critical += 1
+                    elif vulnerability['severity'] == "high":
+                        counter_high += 1
+                    elif vulnerability['severity'] == "medium":
+                        counter_medium += 1
+                    elif vulnerability['severity'] == "low":
+                        counter_low += 1
+                    else:
+                        counter_info += 1
 
-            vulnerabilities[vuln_key]["directly_vulnerable_components"].add(component_bom_ref)
-
-        for vulnerability in component["transitive_vulnerabilities"]:
-            vuln_key = f"{vulnerability['id']}-{vulnerability['severity']}-{vulnerability['score']}"
-
-            if vuln_key not in vulnerabilities:
-                vulnerabilities[vuln_key] = {"id": vulnerability['id'],
-                                             "severity": vulnerability['severity'],
-                                             "score": vulnerability['score'],
-                                             "vector": vulnerability['vector'],
-                                             "directly_vulnerable_components": set(),
-                                             "transitively_vulnerable_components": set()}
-
-                if enrich_cves is True:
-                    vulnerabilities[vuln_key]["epss"] = vulnerability['epss']
-                    vulnerabilities[vuln_key]["cisa_kev"] = vulnerability['cisa_kev']
-
-                if vulnerability['severity'] == "critical":
-                    counter_critical += 1
-                elif vulnerability['severity'] == "high":
-                    counter_high += 1
-                elif vulnerability['severity'] == "medium":
-                    counter_medium += 1
-                elif vulnerability['severity'] == "low":
-                    counter_low += 1
-                else:
-                    counter_info += 1
-
-            vulnerabilities[vuln_key]["transitively_vulnerable_components"].add(component_bom_ref)
-
+                entry = vulnerabilities[vuln_key]
+                entry[components_key].add(component_bom_ref)
+                entry[groups_key].setdefault(component_bom_ref, set()).add(get_state_group(analysis["state"]))
+                if analysis not in entry["analyses"]:
+                    entry["analyses"].append(analysis)
 
     return vulnerabilities, counter_critical, counter_high, counter_medium, counter_low, counter_info
 
@@ -2264,6 +2352,14 @@ def main_cli(input_file_path, output_file_path, enrich_cves, segment_limit, only
     metadata_table_content = build_metadata_table_content(metadata_info, counter_critical, counter_high, counter_medium, counter_low, counter_info, components, enrich_cves, max_epss, kev_counter)
 
     html_content = HTML_TEMPLATE
+
+    state_filter_js_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "state_filter.js")
+    try:
+        with open(state_filter_js_path, "r", encoding="utf-8") as state_filter_js_file:
+            html_content = html_content.replace("<STATE_FILTER_JS_HERE>", state_filter_js_file.read())
+    except OSError:
+        custom_print(f"WARNING: '{state_filter_js_path}' not found, the analysis state filter will not be available in the report.")
+        html_content = html_content.replace("<STATE_FILTER_JS_HERE>", "window.sunshineFilterTooltip = function (n) { return n; }; window.sunshineRegisterChart = function () {}; window.sunshineBuildStateFilter = function () {};")
 
     if segment_limit is False:
         html_content = html_content.replace('turnChartIntoImageIfTooManySegments("chart-container-inner");', "")
